@@ -1,0 +1,164 @@
+#  ___                     _____
+# / __| ___ _ ___ _____ _ |_   _|__ _  _ _ _ ___
+# \__ \/ -_) '_\ V / -_) '_|| |/ _ \ || | '_(_-<
+# |___/\___|_|  \_/\___|_|  |_|\___/\_,_|_| /__/
+#
+# This config file automatically updates when new options are available.
+# Last automatic update: %date_time% (%version%)
+
+chatMenu:
+  header: 'Editing point '
+  numSet: '{} set'
+  none: 'None'
+
+  buttons:
+    preview: '[PREVIEW]'
+    teleport: '[TELEPORT]'
+    move: '[MOVE]'
+    remove: '[REMOVE]'
+    close: '[CLOSE]'
+
+  tooltips:
+    playerExecutor: 'Command will be run as if the player executed it themselves.'
+    consoleExecutor: 'Command will be run as if it was executed from the console.'
+
+    triggers:
+      enter: 'Command will be run when the player reaches this point'
+      exit: 'Command will be run when the player moves to the next point'
+      quit: 'Command will be run if the player exits the tour at this point'
+
+    pointTypes:
+      stationary: 'Makes the camera stay still at this point for some time.'
+      interpolate: 'Moves the camera smoothly between this point and the next at the specified speed.'
+      orbit: 'Rotates the camera around this point while facing it.'
+
+    confirmModes:
+      mouse: 'Requires the player to press the left mouse button'
+      keyboard: 'Requires the player to press F'
+      chat: 'Requires the player to click a button in the chat'
+
+    preview: 'Previews the tour route, starting from this point'
+    teleport: 'Teleports you to this point'
+    move: 'Teleport this points to you'
+    remove: 'Removes this point'
+    close: 'Closes the chat menu'
+
+    setString: 'Click to set value'
+    clearString: 'Click to clear value'
+    changeString: 'Click to change value'
+
+    alreadySelected: 'Already selected'
+    select: 'Click to select'
+
+    enable: 'Click to enable'
+    disable: 'Click to disable'
+
+  units:
+    second: 's'
+    degreesPerSecond: '°/s'
+    degrees: '°'
+    blocks: ' blocks'
+
+  labels:
+    label: 'Label'
+    pointType: 'Point Type'
+    timeVisible: 'Time Visible'
+    confirmToContinue: 'Confirm to continue'
+    confirmMode: '  Mode'
+    title: 'Title'
+    fadeIn: '  Fade-In Time'
+    stay: '  Stay Time'
+    fadeOut: '  Fade-Out Time'
+    description: 'Description'
+    commands: 'Commands'
+    executedBy: 'Executed By'
+    triggeredBy: 'Triggered by'
+
+    # Orbit Mode
+    distance: '  Distance'
+    speed: '  Speed'
+    startingPoint: '  Starting Point'
+    heightOffset: '  Height Offset'
+
+  instructions:
+    label: 'Functions like a name for this route point, used to easily identify it. This is only used in edit mode and is not shown to touring players.'
+    confirmToContinue: 'If checked, the user will need to press the continue button to go to the next point.'
+    title: 'Shows a title to the player when they reach this point. Use \n to add a second line (subtitle).'
+    description: 'This text will be shown in the chat to the player when they reach this point. Use \n to add multiple lines.'
+    addCommand: 'Click to add a command, which will be executed once a player finishes viewing this route point. You can use %player% as a placeholder for the player name.'
+
+continueConfirm:
+  mouse: '&7Press the &aleft mouse button &7to continue the tour.'
+  keyboard: '&7Press &a[F] &7on your keyboard to continue the tour.'
+  button:
+    text: '[CONTINUE]'
+    instruction: 'Click to continue the tour'
+
+commands:
+  errors:
+    playerOnly: '&cThis command can only be used by players'
+    noPermission: '&cYou do not have permission to use this command &7({})'
+    unknownSubCommand: '&cUnknown subcommand {}'
+    invalidNumber: '&c{} is not a number'
+    usage: '&cUsage: {}'
+
+    routeNotFound: '&cThat tour route does not exist. Use /tour create {} to create it.'
+    pointNotFound: '&cPoint #{} not found on route {}'
+    playerNotFound: '&cPlayer {} not found'
+
+    routeAlreadyExists: '&cA route named {} already exists'
+    alreadyWatching: '&cYou are already watching a tour!'
+    alreadyWatchingOther: '&c{} is already watching a tour!'
+    alreadyEditing: '&cYou are already in edit mode!'
+    alreadyEditingOther: '&c{} is already in edit mode! They must exit edit mode before you can edit this route.'
+    notWatching: '&cYou are not watching a tour!'
+    notWatchingOther: '&c{} is not watching a tour!'
+    notEditing: '&cYou are not in edit mode!'
+    notWaiting: '&cYou are not waiting for confirmation'
+
+    noPoints: '&cThe route must contain at least one point'
+    commandsDisabled: '&cYou cannot use commands during the tour'
+
+  forcedOut: '&eYou were forced out of edit mode by {}'
+  forcedOutOther: '&e{} was already editing this route, but was forced out'
+
+  routeCreated: '&aRoute created. Switch to edit mode with {}'
+  routeRemoved: '&aRoute removed.'
+  particlesEnabled: '&aParticles enabled.'
+  particlesDisabled: '&cParticles disabled.'
+  reloaded: '&aConfiguration reloaded.'
+  playedNear: '&aStarted playing tour route &e{} &afor {} nearby players.'
+  stoppedOther: '&aStopped playback of tour route &e{} &afor &e{}&a.'
+  stoppedAll: '&aStopped playback for &e{} &aplayers.'
+
+warnings:
+  interpolateNotSet: '&c[!] &fThere is no next point to interpolate towards'
+  interpolateWorlds: '&c[!] &fCannot interpolate between different worlds'
+
+hotbarItems:
+  createPoint: '&bCreate route point'
+  previewRoute: '&bPreview route'
+  pointSelect: '&bSelect route point'
+  exitEditMode: '&eExit edit mode'
+  toggleParticlesOn: '&bToggle Particles &a(ON)'
+  toggleParticlesOff: '&bToggle Particles &c(OFF)'
+
+actionBar:
+  watching: 'WATCHING TOUR'
+  shiftToExit: 'Press SHIFT to exit'
+  editing: 'EDIT MODE: '
+  editingDesc: 'Editing {}'
+
+points:
+  selectedName: '&bPoint #{}'
+  unselectedName: 'Point #{}'
+
+selectInventory:
+  title: 'Route points ({})'
+  nextPage: 'Next page'
+  prevPage: 'Previous page'
+
+  pointTitle: '&bPoint #{}'
+  type: 'Type: {}'
+  world: 'World: {}'
+  coords: 'X: {} Y: {} Z: {}'

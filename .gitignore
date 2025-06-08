@@ -1,0 +1,18 @@
+# Project exclude paths
+target/
+/.idea/
+# Compiled class file
+*.class
+# Package Files #
+*.war
+*.nar
+*.ear
+*.tar.gz
+*.rar
+
+# IntelliJ project files
+*.iml
+out
+gen
+dependency-reduced-pom.xml
+/.vscode/

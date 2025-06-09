@@ -54,11 +54,10 @@
         </dependency>
 
         <dependency>
-            <groupId>net.minecraft</groupId>
-            <artifactId>server</artifactId>
-            <version>v1_21_R3</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/nms.jar</systemPath>
+            <groupId>net.minecraft.server</groupId>
+            <artifactId>paper-mojang-remapped</artifactId>
+            <version>v1_21_R4</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

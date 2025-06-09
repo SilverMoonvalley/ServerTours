@@ -162,11 +162,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>a</groupId>
-            <artifactId>b</artifactId>
-            <version>3.4.2</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/VentureChat-3.7.2.jar</systemPath>
+            <groupId>mineverse.Aust1n46</groupId>
+            <artifactId>VentureChat</artifactId>
+            <version>3.7.2</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

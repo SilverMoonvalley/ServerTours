@@ -48,5 +48,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>SilverMoonvalley-Maven-Repo-releases</id>
+            <name>银月谷开发组私有maven仓库</name>
+            <url>http://103.205.253.165:30001/releases</url>
+        </repository>
     </repositories>
 </project>

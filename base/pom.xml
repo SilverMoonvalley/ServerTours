@@ -18,6 +18,7 @@
     </properties>
 
     <build>
+        <finalName>${parent.artifactId}-${project.version}</finalName>
         <defaultGoal>clean package</defaultGoal>
         <plugins>
             <plugin>

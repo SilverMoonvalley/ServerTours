@@ -55,7 +55,7 @@
 
         <dependency>
             <groupId>net.minecraft.server</groupId>
-            <artifactId>paper-mojang-remapped</artifactId>
+            <artifactId>spigot-spigot-remapped</artifactId>
             <version>v1_21_R4</version>
             <scope>provided</scope>
         </dependency>

@@ -3,162 +3,162 @@
 # \__ \/ -_) '_\ V / -_) '_|| |/ _ \ || | '_(_-<
 # |___/\___|_|  \_/\___|_|  |_|\___/\_,_|_| /__/
 #
-# This config file automatically updates when new options are available.
-# Last automatic update: %date_time% (%version%)
+# 本配置文件会在新选项可用时自动更新。
+# 最后更新时间: %date_time% (%version%)
 
 chatMenu:
-  header: 'Editing point '
-  numSet: '{} set'
-  none: 'None'
+  header: '正在编辑点 '
+  numSet: '已设置 {}'
+  none: '无'
 
   buttons:
-    preview: '[PREVIEW]'
-    teleport: '[TELEPORT]'
-    move: '[MOVE]'
-    remove: '[REMOVE]'
-    close: '[CLOSE]'
+    preview: '[预览]'
+    teleport: '[传送]'
+    move: '[移动]'
+    remove: '[删除]'
+    close: '[关闭]'
 
   tooltips:
-    playerExecutor: 'Command will be run as if the player executed it themselves.'
-    consoleExecutor: 'Command will be run as if it was executed from the console.'
+    playerExecutor: '命令将模拟玩家自己执行。'
+    consoleExecutor: '命令将模拟控制台执行。'
 
     triggers:
-      enter: 'Command will be run when the player reaches this point'
-      exit: 'Command will be run when the player moves to the next point'
-      quit: 'Command will be run if the player exits the tour at this point'
+      enter: '当玩家到达此点时执行的命令'
+      exit: '当玩家移动到下个点时执行的命令'
+      quit: '如果玩家在此点退出导览时执行的命令'
 
     pointTypes:
-      stationary: 'Makes the camera stay still at this point for some time.'
-      interpolate: 'Moves the camera smoothly between this point and the next at the specified speed.'
-      orbit: 'Rotates the camera around this point while facing it.'
+      stationary: '让摄像机在此点静止停留一段时间。'
+      interpolate: '以指定速度平滑移动摄像机到下一个点。'
+      orbit: '围绕此点旋转摄像机并保持面向中心。'
 
     confirmModes:
-      mouse: 'Requires the player to press the left mouse button'
-      keyboard: 'Requires the player to press F'
-      chat: 'Requires the player to click a button in the chat'
+      mouse: '需要玩家点击鼠标左键'
+      keyboard: '需要玩家按下F键'
+      chat: '需要玩家点击聊天中的按钮'
 
-    preview: 'Previews the tour route, starting from this point'
-    teleport: 'Teleports you to this point'
-    move: 'Teleport this points to you'
-    remove: 'Removes this point'
-    close: 'Closes the chat menu'
+    preview: '从此点开始预览导览路线'
+    teleport: '将你传送至此点'
+    move: '将此点移动至你的位置'
+    remove: '移除此点'
+    close: '关闭聊天菜单'
 
-    setString: 'Click to set value'
-    clearString: 'Click to clear value'
-    changeString: 'Click to change value'
+    setString: '点击设置值'
+    clearString: '点击清空值'
+    changeString: '点击修改值'
 
-    alreadySelected: 'Already selected'
-    select: 'Click to select'
+    alreadySelected: '已选择'
+    select: '点击选择'
 
-    enable: 'Click to enable'
-    disable: 'Click to disable'
+    enable: '点击启用'
+    disable: '点击禁用'
 
   units:
-    second: 's'
-    degreesPerSecond: '°/s'
-    degrees: '°'
-    blocks: ' blocks'
+    second: '秒'
+    degreesPerSecond: '度/秒'
+    degrees: '度'
+    blocks: ' 方块'
 
   labels:
-    label: 'Label'
-    pointType: 'Point Type'
-    timeVisible: 'Time Visible'
-    confirmToContinue: 'Confirm to continue'
-    confirmMode: '  Mode'
-    title: 'Title'
-    fadeIn: '  Fade-In Time'
-    stay: '  Stay Time'
-    fadeOut: '  Fade-Out Time'
-    description: 'Description'
-    commands: 'Commands'
-    executedBy: 'Executed By'
-    triggeredBy: 'Triggered by'
+    label: '标签'
+    pointType: '点类型'
+    timeVisible: '可见时间'
+    confirmToContinue: '需要确认继续'
+    confirmMode: '  模式'
+    title: '标题'
+    fadeIn: '  淡入时间'
+    stay: '  停留时间'
+    fadeOut: '  淡出时间'
+    description: '描述'
+    commands: '命令'
+    executedBy: '执行身份'
+    triggeredBy: '触发条件'
 
-    # Orbit Mode
-    distance: '  Distance'
-    speed: '  Speed'
-    startingPoint: '  Starting Point'
-    heightOffset: '  Height Offset'
+    # 环绕模式
+    distance: '  距离'
+    speed: '  速度'
+    startingPoint: '  起始点'
+    heightOffset: '  高度偏移'
 
   instructions:
-    label: 'Functions like a name for this route point, used to easily identify it. This is only used in edit mode and is not shown to touring players.'
-    confirmToContinue: 'If checked, the user will need to press the continue button to go to the next point.'
-    title: 'Shows a title to the player when they reach this point. Use \n to add a second line (subtitle).'
-    description: 'This text will be shown in the chat to the player when they reach this point. Use \n to add multiple lines.'
-    addCommand: 'Click to add a command, which will be executed once a player finishes viewing this route point. You can use %player% as a placeholder for the player name.'
+    label: '作为此路径点的名称，仅用于编辑模式识别，不会向玩家显示。'
+    confirmToContinue: '启用后，玩家需要手动确认才能前往下个点。'
+    title: '玩家到达此点时显示的标题。使用 \n 可添加副标题。'
+    description: '玩家到达此点时在聊天中显示的文本。使用 \n 添加多行内容。'
+    addCommand: '点击添加命令，当玩家完成此路径点时执行。可使用 %player% 作为玩家名占位符。'
 
 continueConfirm:
-  mouse: '&7Press the &aleft mouse button &7to continue the tour.'
-  keyboard: '&7Press &a[F] &7on your keyboard to continue the tour.'
+  mouse: '&7按 &a鼠标左键 &7继续导览。'
+  keyboard: '&7按键盘上的 &a[F] &7键继续导览。'
   button:
-    text: '[CONTINUE]'
-    instruction: 'Click to continue the tour'
+    text: '[继续]'
+    instruction: '点击继续导览'
 
 commands:
   errors:
-    playerOnly: '&cThis command can only be used by players'
-    noPermission: '&cYou do not have permission to use this command &7({})'
-    unknownSubCommand: '&cUnknown subcommand {}'
-    invalidNumber: '&c{} is not a number'
-    usage: '&cUsage: {}'
+    playerOnly: '&c此命令只能由玩家使用'
+    noPermission: '&c你没有使用此命令的权限 &7({})'
+    unknownSubCommand: '&c未知子命令 {}'
+    invalidNumber: '&c{} 不是有效数字'
+    usage: '&c用法: {}'
 
-    routeNotFound: '&cThat tour route does not exist. Use /tour create {} to create it.'
-    pointNotFound: '&cPoint #{} not found on route {}'
-    playerNotFound: '&cPlayer {} not found'
+    routeNotFound: '&c导览路线不存在。使用 /tour create {} 创建。'
+    pointNotFound: '&c在路线 {} 中找不到 #{} 号点'
+    playerNotFound: '&c找不到玩家 {}'
 
-    routeAlreadyExists: '&cA route named {} already exists'
-    alreadyWatching: '&cYou are already watching a tour!'
-    alreadyWatchingOther: '&c{} is already watching a tour!'
-    alreadyEditing: '&cYou are already in edit mode!'
-    alreadyEditingOther: '&c{} is already in edit mode! They must exit edit mode before you can edit this route.'
-    notWatching: '&cYou are not watching a tour!'
-    notWatchingOther: '&c{} is not watching a tour!'
-    notEditing: '&cYou are not in edit mode!'
-    notWaiting: '&cYou are not waiting for confirmation'
+    routeAlreadyExists: '&c已存在名为 {} 的路线'
+    alreadyWatching: '&c你已经在观看导览了！'
+    alreadyWatchingOther: '&c{} 已经在观看导览了！'
+    alreadyEditing: '&c你已处于编辑模式！'
+    alreadyEditingOther: '&c{} 正在编辑此路线！你必须等待其退出编辑模式。'
+    notWatching: '&c你当前没有观看导览！'
+    notWatchingOther: '&c{} 当前没有观看导览！'
+    notEditing: '&c你未处于编辑模式！'
+    notWaiting: '&c你不在等待确认状态'
 
-    noPoints: '&cThe route must contain at least one point'
-    commandsDisabled: '&cYou cannot use commands during the tour'
+    noPoints: '&c路线必须包含至少一个点'
+    commandsDisabled: '&c导览期间无法使用命令'
 
-  forcedOut: '&eYou were forced out of edit mode by {}'
-  forcedOutOther: '&e{} was already editing this route, but was forced out'
+  forcedOut: '&e你被 {} 强制退出编辑模式'
+  forcedOutOther: '&e已强制退出 {} 的编辑模式'
 
-  routeCreated: '&aRoute created. Switch to edit mode with {}'
-  routeRemoved: '&aRoute removed.'
-  particlesEnabled: '&aParticles enabled.'
-  particlesDisabled: '&cParticles disabled.'
-  reloaded: '&aConfiguration reloaded.'
-  playedNear: '&aStarted playing tour route &e{} &afor {} nearby players.'
-  stoppedOther: '&aStopped playback of tour route &e{} &afor &e{}&a.'
-  stoppedAll: '&aStopped playback for &e{} &aplayers.'
+  routeCreated: '&a路线已创建。使用 {} 进入编辑模式'
+  routeRemoved: '&a路线已移除。'
+  particlesEnabled: '&a粒子效果已启用。'
+  particlesDisabled: '&c粒子效果已禁用。'
+  reloaded: '&a配置已重载。'
+  playedNear: '&a已为 {} 名附近玩家播放路线 &e{}&a。'
+  stoppedOther: '&a已停止玩家 &e{} &a的路线 &e{} &a播放。'
+  stoppedAll: '&a已停止 {} 名玩家的播放。'
 
 warnings:
-  interpolateNotSet: '&c[!] &fThere is no next point to interpolate towards'
-  interpolateWorlds: '&c[!] &fCannot interpolate between different worlds'
+  interpolateNotSet: '&c[!] &f没有设置下一个插值点'
+  interpolateWorlds: '&c[!] &f无法在不同世界间插值移动'
 
 hotbarItems:
-  createPoint: '&bCreate route point'
-  previewRoute: '&bPreview route'
-  pointSelect: '&bSelect route point'
-  exitEditMode: '&eExit edit mode'
-  toggleParticlesOn: '&bToggle Particles &a(ON)'
-  toggleParticlesOff: '&bToggle Particles &c(OFF)'
+  createPoint: '&b创建路径点'
+  previewRoute: '&b预览路线'
+  pointSelect: '&b选择路径点'
+  exitEditMode: '&e退出编辑模式'
+  toggleParticlesOn: '&b切换粒子效果 &a(开启)'
+  toggleParticlesOff: '&b切换粒子效果 &c(关闭)'
 
 actionBar:
-  watching: 'WATCHING TOUR'
-  shiftToExit: 'Press SHIFT to exit'
-  editing: 'EDIT MODE: '
-  editingDesc: 'Editing {}'
+  watching: '正在观看导览'
+  shiftToExit: '按下 SHIFT 退出'
+  editing: '编辑模式: '
+  editingDesc: '正在编辑 {}'
 
 points:
-  selectedName: '&bPoint #{}'
-  unselectedName: 'Point #{}'
+  selectedName: '&b路径点 #{}'
+  unselectedName: '路径点 #{}'
 
 selectInventory:
-  title: 'Route points ({})'
-  nextPage: 'Next page'
-  prevPage: 'Previous page'
+  title: '路径点 ({})'
+  nextPage: '下一页'
+  prevPage: '上一页'
 
-  pointTitle: '&bPoint #{}'
-  type: 'Type: {}'
-  world: 'World: {}'
+  pointTitle: '&b路径点 #{}'
+  type: '类型: {}'
+  world: '世界: {}'
   coords: 'X: {} Y: {} Z: {}'

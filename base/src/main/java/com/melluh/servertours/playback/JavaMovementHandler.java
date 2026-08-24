@@ -35,7 +35,7 @@ public class JavaMovementHandler implements MovementHandler {
         }
         this.vehicleEntity.nmsSetLocation(location);
         NmsHandler handler = NmsAdapter.getHandler();
-        handler.sendMoveVehiclePacket(player);
+        handler.sendMoveVehiclePacket(player, this.vehicleEntity);
         handler.rotatePlayerHead(player, location.getYaw(), location.getPitch());
     }
 

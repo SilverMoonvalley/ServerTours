@@ -9,5 +9,5 @@ public interface NmsHandler
     
     void rotatePlayerHead(Player p0, float p1, float p2);
     
-    void sendMoveVehiclePacket(Player p0);
+    void sendMoveVehiclePacket(Player p0, TemporaryEntity p1);
 }

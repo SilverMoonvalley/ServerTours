@@ -33,11 +33,11 @@ public class NmsHandler implements com.melluh.servertours.nms.NmsHandler, Modern
     }
 
     @Override
-    public void sendMoveVehiclePacket(Player player) {
-        if (player == null) {
+    public void sendMoveVehiclePacket(Player player, TemporaryEntity vehicleEntity) {
+        if (player == null || vehicleEntity == null) {
             return;
         }
-        this.sendPacket(player, PacketPlayOutVehicleMove.a(((CraftEntity) player).getHandle()));
+        this.sendPacket(player, PacketPlayOutVehicleMove.a(((CraftEntity) vehicleEntity.getBukkitEntity()).getHandle()));
     }
 
     @Override

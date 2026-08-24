@@ -16,3 +16,7 @@ out
 gen
 dependency-reduced-pom.xml
 /.vscode/
+node_modules/
+test-server/
+/TypeWriter/
+/tests/mineflayer/reports/

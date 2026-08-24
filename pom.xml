@@ -29,6 +29,17 @@
             <url>https://repo.huaweicloud.com/repository/maven</url>
         </repository>
         <repository>
+            <id>nexus-releases</id>
+            <url>https://www.4399mc.cn/nexus/repository/maven-releases/</url>
+        </repository>
+        <repository>
+            <id>nexus-snapshots</id>
+            <url>https://www.4399mc.cn/nexus/repository/maven-snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public</url>
         </repository>
@@ -48,10 +59,16 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-        <repository>
-            <id>SilverMoonvalley-Maven-Repo-releases</id>
-            <name>银月谷开发组私有maven仓库</name>
-            <url>http://103.205.253.165:30001/releases</url>
-        </repository>
     </repositories>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>https://www.4399mc.cn/nexus/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <url>https://www.4399mc.cn/nexus/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
 </project>

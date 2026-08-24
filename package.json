@@ -1,0 +1,12 @@
+{
+  "name": "servertours-integration-tests",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test:mineflayer": "node tests/mineflayer/servertours.integration.test.js",
+    "test:smoothness": "node tests/mineflayer/servertours.smoothness.test.js"
+  },
+  "dependencies": {
+    "mineflayer": "^4.31.0"
+  }
+}

@@ -17,6 +17,7 @@ import com.melluh.servertours.hook.FloodgateHook;
 import com.melluh.servertours.hook.HookHandler;
 import com.melluh.servertours.hook.VentureChatHook;
 import com.melluh.servertours.playback.CraftPlaybackManager;
+import com.melluh.servertours.recording.RecordingManager;
 import com.melluh.servertours.route.CraftRouteManager;
 import com.melluh.servertours.util.nms.NmsAdapter;
 import com.melluh.servertours.util.protocol.PacketUtil;
@@ -31,6 +32,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.regex.Matcher;
 
 public class ServerTours extends JavaPlugin implements ServerToursAPI.ServerToursPlugin {
     private static ServerTours instance;
@@ -40,6 +42,8 @@ public class ServerTours extends JavaPlugin implements ServerToursAPI.ServerTour
     private EditModeManager editModeManager;
     private CraftPlaybackManager playbackManager;
     private CraftRouteManager routeManager;
+    @Getter
+    private RecordingManager recordingManager;
     private Settings settings;
     private Language language;
     @Getter
@@ -60,9 +64,13 @@ public class ServerTours extends JavaPlugin implements ServerToursAPI.ServerTour
     }
 
     public static String translate(String s, Object... array) {
-        String s2 = ServerTours.instance.getTranslation(s);
+        return applyTranslationPlaceholders(ServerTours.instance.getTranslation(s), array);
+    }
+
+    static String applyTranslationPlaceholders(String translation, Object... array) {
+        String s2 = translation;
         for (Object o : array) {
-            s2 = s2.replaceFirst("\\{}", (o == null) ? "null" : o.toString().replace("\\", "\\\\"));
+            s2 = s2.replaceFirst("\\{}", Matcher.quoteReplacement(String.valueOf(o)));
         }
         return s2;
     }
@@ -82,11 +90,14 @@ public class ServerTours extends JavaPlugin implements ServerToursAPI.ServerTour
         this.protocolManager = ProtocolLibrary.getProtocolManager();
         PacketUtil.registerProtocolLib();
         this.routeManager = new CraftRouteManager();
+        this.recordingManager = new RecordingManager(this);
         (this.editModeManager = new EditModeManager()).startRunnable();
         (this.playbackManager = new CraftPlaybackManager()).startRunnable();
+        this.recordingManager.startRunnable();
         PluginManager pluginManager = this.getServer().getPluginManager();
         pluginManager.registerEvents(this.editModeManager, this);
         pluginManager.registerEvents(this.playbackManager, this);
+        pluginManager.registerEvents(this.recordingManager, this);
         CommandHandler commandHandler = new CommandHandler();
         commandHandler.register("create", new CreateSubCommand());
         commandHandler.register("edit", new EditSubCommand());
@@ -96,6 +107,7 @@ public class ServerTours extends JavaPlugin implements ServerToursAPI.ServerTour
         commandHandler.register("stop", new StopSubCommand());
         commandHandler.register("remove", new RemoveSubCommand());
         commandHandler.register("reload", new ReloadSubCommand());
+        commandHandler.register("record", new RecordSubCommand());
         commandHandler.register("continue", new ContinueSubCommand());
         commandHandler.register("deselect", new DeselectSubCommand());
         commandHandler.register("pointaction", new PointActionSubCommand());
@@ -118,10 +130,17 @@ public class ServerTours extends JavaPlugin implements ServerToursAPI.ServerTour
         }
         HookHandler.initializeHook("Floodgate", FloodgateHook.class);
         HookHandler.initializeHook("VentureChat", VentureChatHook.class);
-        this.getServer().getScheduler().runTask(this, () -> this.persistenceManager.load());
+        this.getServer().getScheduler().runTask(this, () -> {
+            this.recordingManager.load();
+            this.persistenceManager.load();
+            this.recordingManager.reconcileRoutes();
+        });
     }
 
     public void onDisable() {
+        if (this.recordingManager != null) {
+            this.recordingManager.shutdown();
+        }
         if (this.playbackManager != null) {
             this.playbackManager.stopAllTouring();
         }

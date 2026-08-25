@@ -1,8 +1,8 @@
 package com.melluh.servertours.playback.camera;
 
 import com.melluh.servertours.api.playback.PlaybackFrame;
+import com.melluh.servertours.api.playback.PauseReason;
 import com.melluh.servertours.api.playback.track.StateRebaseReason;
-import com.melluh.servertours.api.playback.track.StateTrackRuntime;
 import com.melluh.servertours.api.playback.track.TrackContext;
 import com.melluh.servertours.playback.CraftTouringPlayer;
 import com.melluh.servertours.playback.timeline.RouteTimeline;
@@ -13,7 +13,7 @@ import org.bukkit.Location;
 import java.util.Objects;
 
 /** Adapts the existing route point samplers to an absolute state track. */
-public final class RouteCameraTrackRuntime implements StateTrackRuntime {
+public final class RouteCameraTrackRuntime implements CameraTrackRuntime {
     private static final double POSITION_EPSILON = 1.0e-6;
     private static final float ROTATION_EPSILON = 1.0e-3f;
 
@@ -62,11 +62,21 @@ public final class RouteCameraTrackRuntime implements StateTrackRuntime {
         this.lastNaturalSample = position;
     }
 
-    public void rebasePointStart(int pointIndex, PlaybackFrame frame, StateRebaseReason reason) {
+    @Override
+    public void rebaseRoutePointStart(int pointIndex, PlaybackFrame frame, StateRebaseReason reason) {
         Objects.requireNonNull(frame, "frame may not be null");
         TimelinePosition pointStart = this.timeline.pointStartPosition(pointIndex);
         this.movementHandler.rebase(this.touringPlayer, this.location(pointStart), reason);
         this.lastNaturalSample = pointStart;
+    }
+
+    @Override
+    public void onPause(TrackContext context, PauseReason reason) {
+        long frameIndex = Math.min(context.getSession().getCurrentFrame(), this.getEndFrame());
+        TimelinePosition position = this.timeline.sample(frameIndex);
+        this.movementHandler.rebase(this.touringPlayer, this.location(position),
+                StateRebaseReason.PAUSE_FREEZE);
+        this.lastNaturalSample = position;
     }
 
     @Override

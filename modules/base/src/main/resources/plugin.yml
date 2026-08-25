@@ -11,6 +11,10 @@ commands:
 permissions:
   servertours.commands.play:
     default: "true"
+  servertours.commands.record:
+    default: "op"
+  servertours.commands.record.manage:
+    default: "op"
 api-version: 1.17
 softdepend:
  - PlaceholderAPI

@@ -14,6 +14,10 @@ public class CreateSubCommand implements CommandHandler.SubCommand {
             commandSender.sendMessage(ServerTours.translate("commands.errors.routeAlreadyExists", array[1]));
             return;
         }
+        if (ServerTours.getInstance().getRecordingManager().isRouteNameReserved(array[1])) {
+            commandSender.sendMessage(ServerTours.translate("commands.record.errors.nameReserved", array[1]));
+            return;
+        }
         ServerTours.getInstance().getRouteManager().createRoute(array[1]).saveToDisk();
         commandSender.sendMessage(ServerTours.translate("commands.routeCreated", "/tour edit " + array[1].toLowerCase()));
     }

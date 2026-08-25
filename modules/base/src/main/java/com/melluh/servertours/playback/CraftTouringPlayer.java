@@ -4,6 +4,7 @@ import com.melluh.servertours.ServerTours;
 import com.melluh.servertours.api.TouringPlayer;
 import com.melluh.servertours.api.event.RoutePlaybackEndEvent;
 import com.melluh.servertours.api.event.RoutePlaybackPointEvent;
+import com.melluh.servertours.api.object.CameraSource;
 import com.melluh.servertours.api.object.RoutePoint;
 import com.melluh.servertours.api.playback.PauseReason;
 import com.melluh.servertours.api.playback.PlaybackFrame;
@@ -16,6 +17,8 @@ import com.melluh.servertours.editmode.EditingPlayer;
 import com.melluh.servertours.hook.HookHandler;
 import com.melluh.servertours.hook.VentureChatHook;
 import com.melluh.servertours.playback.camera.MovementHandler;
+import com.melluh.servertours.playback.camera.CameraTrackRuntime;
+import com.melluh.servertours.playback.camera.RecordedCameraTrackRuntime;
 import com.melluh.servertours.playback.camera.RouteCameraTrackRuntime;
 import com.melluh.servertours.playback.event.PlaybackEventQueue;
 import com.melluh.servertours.playback.event.ScheduledPlaybackEvent;
@@ -25,6 +28,7 @@ import com.melluh.servertours.playback.timeline.SceneClock;
 import com.melluh.servertours.playback.track.CraftTrackContext;
 import com.melluh.servertours.playback.track.ManagedTrackRuntime;
 import com.melluh.servertours.playback.track.TrackFactoryRegistration;
+import com.melluh.servertours.recording.storage.CameraRecording;
 import com.melluh.servertours.route.CraftRoute;
 import com.melluh.servertours.route.RoutePointCommand;
 import com.melluh.servertours.route.point.CraftRoutePoint;
@@ -42,6 +46,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
@@ -55,6 +60,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 
 /** Compatibility facade around the absolute-time playback session. */
@@ -78,7 +84,7 @@ public class CraftTouringPlayer implements TouringPlayer {
     private final List<ManagedTrackRuntime> tracks = new ArrayList<>();
 
     private CraftTrackContext trackContext;
-    private RouteCameraTrackRuntime cameraTrack;
+    private CameraTrackRuntime cameraTrack;
     private PlaybackEventQueue eventQueue;
     private PlaybackState playbackState = PlaybackState.CREATED;
     private PauseReason pauseReason;
@@ -86,6 +92,7 @@ public class CraftTouringPlayer implements TouringPlayer {
     private int currentPointIndex;
     private long currentFrame;
     private long durationFrames;
+    private long cameraDurationFrames;
     private int actionBarTimeLeft;
     private boolean waitingForConfirmation;
     private boolean manualConfirmation;
@@ -144,6 +151,7 @@ public class CraftTouringPlayer implements TouringPlayer {
         this.currentPoint = Objects.requireNonNull(route.getPoint(0), "route must contain at least one point");
         this.currentPointIndex = 0;
         this.durationFrames = this.routeTimeline.cameraDuration();
+        this.cameraDurationFrames = this.routeTimeline.cameraDuration();
         this.progressBarEnabled = ServerTours.getInstance().getConfig().getBoolean("playMode.xpBarProgress");
         this.actionBarEnabled = ServerTours.getInstance().getConfig().getBoolean("playMode.actionBarEnabled");
         this.canExit = ServerTours.getInstance().getConfig().getBoolean("playMode.allowExit");
@@ -236,8 +244,9 @@ public class CraftTouringPlayer implements TouringPlayer {
     }
 
     private void buildTracksAndTimeline() {
-        this.trackContext = new CraftTrackContext(this, this.routeTimeline.cameraDuration());
-        this.cameraTrack = new RouteCameraTrackRuntime(this, this.movementHandler, this.routeTimeline, this.easingFunction);
+        this.cameraTrack = this.createCameraTrack();
+        this.cameraDurationFrames = this.cameraTrack.getEndFrame();
+        this.trackContext = new CraftTrackContext(this, this.cameraDurationFrames);
         TrackFactoryRegistration cameraRegistration = new TrackFactoryRegistration(
                 ServerTours.getInstance(), new NamespacedKey(ServerTours.getInstance(), "route-camera"),
                 BUILTIN_TRACK_PRIORITY, BUILTIN_TRACK_ORDER, ignored -> Optional.empty());
@@ -309,6 +318,31 @@ public class CraftTouringPlayer implements TouringPlayer {
             }
         }
         this.eventQueue = new PlaybackEventQueue(events);
+    }
+
+    private CameraTrackRuntime createCameraTrack() {
+        if (this.route.getCameraSource() != CameraSource.RECORDED) {
+            return new RouteCameraTrackRuntime(
+                    this, this.movementHandler, this.routeTimeline, this.easingFunction);
+        }
+        UUID recordingId = this.route.getCameraRecordingId().orElseThrow(
+                () -> new IllegalStateException("route selects RECORDED camera source without a recording id"));
+        if (ServerTours.getInstance().getRecordingManager() == null) {
+            throw new IllegalStateException("camera recording manager is unavailable");
+        }
+        CameraRecording recording = ServerTours.getInstance()
+                .getRecordingManager().getRepository().getReady(recordingId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "camera recording " + recordingId + " is unavailable"));
+        World world = Bukkit.getWorld(recording.metadata().worldId());
+        if (world == null) {
+            world = Bukkit.getWorld(recording.metadata().worldName());
+        }
+        if (world == null) {
+            throw new IllegalStateException("camera recording world is unavailable: "
+                    + recording.metadata().worldName());
+        }
+        return new RecordedCameraTrackRuntime(this, this.movementHandler, recording, world);
     }
 
     private boolean canContinueStarting() {
@@ -453,7 +487,7 @@ public class CraftTouringPlayer implements TouringPlayer {
             PlaybackFrame trackFrame = this.frame(trackFrameIndex);
             if (explicitPointIndex != null && track.runtime() == this.cameraTrack) {
                 this.invokeExternal(() -> track.rebaseState(trackFrame, StateRebaseReason.EXPLICIT_SEEK,
-                        () -> this.cameraTrack.rebasePointStart(explicitPointIndex, trackFrame,
+                        () -> this.cameraTrack.rebaseRoutePointStart(explicitPointIndex, trackFrame,
                                 StateRebaseReason.EXPLICIT_SEEK)));
             } else if (track.runtime() == this.cameraTrack && this.seekCameraPointIndex >= 0
                     && trackFrame.index() == this.seekCameraStartFrame) {
@@ -461,7 +495,7 @@ public class CraftTouringPlayer implements TouringPlayer {
                     this.invokeExternal(() -> track.renderState(trackFrame));
                 } else {
                     this.invokeExternal(() -> track.rebaseState(trackFrame, rebaseReason,
-                            () -> this.cameraTrack.rebasePointStart(this.seekCameraPointIndex, trackFrame,
+                            () -> this.cameraTrack.rebaseRoutePointStart(this.seekCameraPointIndex, trackFrame,
                                     rebaseReason)));
                 }
             } else {
@@ -956,7 +990,7 @@ public class CraftTouringPlayer implements TouringPlayer {
 
     @Override
     public float getRouteProgress() {
-        long cameraDuration = this.routeTimeline.cameraDuration();
+        long cameraDuration = this.cameraDurationFrames;
         if (cameraDuration == 0L) {
             return 1.0f;
         }

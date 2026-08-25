@@ -4,15 +4,13 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.Objects;
 
-public record CameraPlaybackSettings(JavaCameraBackend javaBackend, int interpolationTicks,
-                                     int anchorIntervalFrames,
+public record CameraPlaybackSettings(int interpolationTicks, int anchorIntervalFrames,
                                      double maxAnchorDistance) {
     static final int DEFAULT_INTERPOLATION_TICKS = 3;
     static final int DEFAULT_ANCHOR_INTERVAL_FRAMES = 10;
     static final double DEFAULT_MAX_ANCHOR_DISTANCE = 25.0;
 
     public CameraPlaybackSettings {
-        Objects.requireNonNull(javaBackend, "javaBackend may not be null");
         if (interpolationTicks < 0 || interpolationTicks > 59) {
             throw new IllegalArgumentException("interpolationTicks must be between 0 and 59");
         }
@@ -28,7 +26,6 @@ public record CameraPlaybackSettings(JavaCameraBackend javaBackend, int interpol
         Objects.requireNonNull(configuration, "configuration may not be null");
         String root = "playMode.camera.";
         return new CameraPlaybackSettings(
-                JavaCameraBackend.parse(configuration.getString(root + "javaBackend", "VEHICLE")),
                 bounded(configuration.getInt(root + "interpolationTicks", DEFAULT_INTERPOLATION_TICKS),
                         0, 59, DEFAULT_INTERPOLATION_TICKS),
                 positive(configuration.getInt(root + "anchorIntervalFrames", DEFAULT_ANCHOR_INTERVAL_FRAMES),

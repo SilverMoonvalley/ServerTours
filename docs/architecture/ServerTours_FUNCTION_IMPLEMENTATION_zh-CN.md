@@ -186,24 +186,19 @@ ServerTours 是一个 Bukkit/Paper 服务器导览插件，当前版本为 `3.0.
 - 执行当前点的 `QUIT` 命令。
 - 从播放管理器注销。
 
-玩家也可以在允许退出时通过 SHIFT 或下车事件退出导览；退出权限受 `playMode.allowExit` 控制。
+玩家也可以在允许退出时通过 SHIFT，或在启用移动退出后通过方向输入退出导览；退出权限受 `playMode.allowExit` 控制。
 
-## 7. Java/Bedrock 移动实现
+## 7. Java Display 相机实现
 
-Java 玩家使用 `JavaMovementHandler`：
+Java 玩家统一使用 `DisplayCameraMovementHandler`：
 
-- 通过 NMS 临时实体承载玩家。
-- 每 tick 更新临时实体位置。
-- 发送 move vehicle packet。
-- 同步旋转玩家头部。
-- 如果跨世界、目标区块未加载或距离超出视距，会重建载具并直接传送。
+- 为当前玩家创建仅其可见的 packet-only `TextDisplay`。
+- 将客户端相机目标切换到该 Display，并发送绝对目标位置和旋转。
+- 连续播放利用客户端 Display 插值；暂停、跳转和不连续旋转会替换相机实体以硬重定位。
+- 玩家实体只作为区块加载锚点，按帧数或距离周期性传送，不再挂载任何载具。
+- 清理时先把客户端相机切回玩家，再销毁临时 Display。
 
-Bedrock 玩家使用 `BedrockMovementHandler`：
-
-- 开启飞行。
-- 每 tick 直接传送到播放位置。
-
-Floodgate hook 用于判断玩家是否为 Bedrock 玩家。
+播放相机面向现代 Java 客户端，不再提供盔甲架载具或 Bedrock 传送 fallback。
 
 ## 8. ProtocolLib 和 NMS
 
@@ -215,10 +210,9 @@ ProtocolLib 主要处理三类事情：
 
 NMS 主要用于：
 
-- 生成临时实体。
-- 添加/移除玩家乘客关系。
-- 发送 vehicle 移动包。
-- 旋转玩家头部。
+- 构造仅对单个玩家可见的临时 `TextDisplay`。
+- 发送 Display spawn、metadata、camera target、teleport 和 destroy 包。
+- 按正确顺序把客户端相机切到 Display，并在清理时切回玩家。
 - 在新版服务端中发送实体传送包。
 
 当前 NMS 版本分发在 `NmsVersion`：

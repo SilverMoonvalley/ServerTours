@@ -40,12 +40,21 @@ editMode:
   # effect.
   enableHotbarAltCommands: false
 
+recording:
+  # Maximum duration of one camera recording. Reaching the limit completes
+  # the recording automatically.
+  maxDurationSeconds: 300
+
+  # Maximum spatial error allowed while simplifying the captured 20 Hz path.
+  positionTolerance: 0.05
+
+  # Maximum yaw or pitch error allowed while simplifying the captured path.
+  rotationToleranceDegrees: 0.5
+
 playMode:
-  # Controls the camera transport used for Java Edition players. VEHICLE keeps
-  # the legacy invisible armor stand. DISPLAY uses a viewer-only text display
-  # and client interpolation; it requires a 1.19.4-or-newer Java client.
+  # Controls the viewer-only text display camera used for Java Edition players.
+  # Client interpolation smooths the server's 20 Hz position updates.
   camera:
-    javaBackend: VEHICLE
     interpolationTicks: 3
     anchorIntervalFrames: 10
     maxAnchorDistance: 25.0
@@ -66,8 +75,6 @@ playMode:
   #   progress bar feature will no longer work.
   # - Spectator mode shows all invisible entities. This means you will
   #   see, for example, the entities used by your holograms plugin.
-  #   ServerTours itself also uses an invisible entity, which might show
-  #   up if the player is looking down in the tour route.
   # - Spectator mode isn't available on Bedrock edition.
   useSpectator: false
 

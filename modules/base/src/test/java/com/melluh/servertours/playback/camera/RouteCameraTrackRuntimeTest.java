@@ -67,7 +67,7 @@ class RouteCameraTrackRuntimeTest {
         RouteCameraTrackRuntime runtime = new RouteCameraTrackRuntime(
                 touringPlayer, movementHandler, timeline, easing);
 
-        runtime.rebasePointStart(1, new PlaybackFrame(5L, 250_000_000L, 9L),
+        runtime.rebaseRoutePointStart(1, new PlaybackFrame(5L, 250_000_000L, 9L),
                 StateRebaseReason.EXPLICIT_SEEK);
 
         verify(movementHandler).rebase(touringPlayer, location, StateRebaseReason.EXPLICIT_SEEK);

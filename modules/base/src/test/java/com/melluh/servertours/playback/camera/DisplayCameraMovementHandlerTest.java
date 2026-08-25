@@ -42,6 +42,8 @@ class DisplayCameraMovementHandlerTest {
     void initializeSpawnsViewerCameraAtEyeHeightAndAnchorsPlayer() {
         DisplayCameraMovementHandler handler = this.handler(3, 10, 25.0);
 
+        assertEquals(3, handler.presentationLeadFrames());
+
         handler.initialize(this.touringPlayer, this.location(2.0, 70.0, 4.0));
 
         verify(this.restoreWrapper).setAllowFlight(true);
@@ -160,8 +162,7 @@ class DisplayCameraMovementHandlerTest {
 
     private DisplayCameraMovementHandler handler(int interpolationTicks, int anchorInterval, double maxDistance) {
         return new DisplayCameraMovementHandler(this.nmsHandler,
-                new CameraPlaybackSettings(JavaCameraBackend.DISPLAY, interpolationTicks,
-                        anchorInterval, maxDistance));
+                new CameraPlaybackSettings(interpolationTicks, anchorInterval, maxDistance));
     }
 
     private Location location(double x, double y, double z) {

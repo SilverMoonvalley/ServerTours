@@ -368,7 +368,7 @@ async function waitForDisplayCameraStart(bot, mark, maxMs = 6000) {
     return false
   }, maxMs).catch((error) => {
     throw new Error(
-      `${error.message} Ensure playMode.camera.javaBackend is DISPLAY, restart Paper, ` +
+      `${error.message} Restart Paper with the current ServerTours build ` +
       'and connect with a Java Edition client.'
     )
   })
@@ -632,7 +632,7 @@ async function main() {
     textDisplayTypeId,
     assumptions: [
       'The test account is a server operator.',
-      'playMode.camera.javaBackend is DISPLAY and Paper was restarted.',
+      'Paper was restarted with the current Display-only ServerTours build.',
       'ProtocolLib and ServerTours are enabled.',
       'editMode.enableHotbarAltCommands is true.'
     ]

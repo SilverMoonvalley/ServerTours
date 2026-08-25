@@ -106,7 +106,7 @@ class ManagedTrackRuntimeTest {
     }
 
     @Test
-    void stateFramesUseContinuousRenderOnlyForAdjacentTargets() throws Exception {
+    void stateFramesUseContinuousRenderForEveryMonotonicForwardTarget() throws Exception {
         List<String> calls = new ArrayList<>();
         StateTrackRuntime runtime = new StateTrackRuntime() {
             @Override
@@ -137,7 +137,7 @@ class ManagedTrackRuntimeTest {
         assertEquals(List.of(
                 "rebase:0:SESSION_START",
                 "render:1",
-                "rebase:4:CLOCK_CATCH_UP",
+                "render:4",
                 "rebase:2:CLOCK_CATCH_UP"
         ), calls);
         assertEquals(2L, managed.lastSuccessfulStateFrame());

@@ -3,6 +3,8 @@ package com.melluh.servertours.api.object;
 import org.bukkit.Location;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface Route {
     RoutePoint createPoint(Location p0, RoutePointType p1);
@@ -22,6 +24,29 @@ public interface Route {
     void removePoint(RoutePoint p0);
 
     String getName();
+
+    /** Returns which built-in camera track this route uses. */
+    default CameraSource getCameraSource() {
+        return CameraSource.POINTS;
+    }
+
+    default void setCameraSource(CameraSource source) {
+        throw new UnsupportedOperationException("this route does not support configurable camera sources");
+    }
+
+    /** Returns the retained recording reference, including while the point source is selected. */
+    default Optional<UUID> getCameraRecordingId() {
+        return Optional.empty();
+    }
+
+    default void setCameraRecordingId(UUID recordingId) {
+        throw new UnsupportedOperationException("this route does not support recorded cameras");
+    }
+
+    /** Detaches the recording and selects the point camera source. */
+    default void clearCameraRecording() {
+        throw new UnsupportedOperationException("this route does not support recorded cameras");
+    }
 
     /**
      * Returns the positional interpolation used by this route.

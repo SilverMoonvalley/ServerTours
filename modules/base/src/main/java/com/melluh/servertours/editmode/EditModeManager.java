@@ -31,6 +31,10 @@ public class EditModeManager implements Listener {
     }
 
     public void startEditing(Player player, CraftRoute craftRoute) {
+        if (ServerTours.getInstance().getRecordingManager() != null
+                && ServerTours.getInstance().getRecordingManager().isRecording(player)) {
+            throw new IllegalStateException("cannot enter edit mode while recording a camera path");
+        }
         this.stopEditing(player);
         EditingPlayer editingPlayer = new EditingPlayer(player, craftRoute);
         editingPlayer.setup();

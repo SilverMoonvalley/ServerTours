@@ -1,6 +1,7 @@
 package com.melluh.servertours.route;
 
 import com.melluh.servertours.ServerTours;
+import com.melluh.servertours.api.object.CameraSource;
 import com.melluh.servertours.api.object.PositionInterpolationMode;
 import com.melluh.servertours.api.object.RoutePointType;
 import com.melluh.servertours.api.object.RotationInterpolationMode;
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -55,6 +58,8 @@ class CraftRouteInterpolationSettingsTest {
                 route.getPositionInterpolationMode());
         assertEquals(RotationInterpolationMode.CATMULL_ROM,
                 route.getRotationInterpolationMode());
+        assertEquals(CameraSource.POINTS, route.getCameraSource());
+        assertTrue(route.getCameraRecordingId().isEmpty());
         assertFalse(yaml.contains("versions.schema"));
         assertFalse(yaml.contains("camera"));
     }
@@ -73,21 +78,49 @@ class CraftRouteInterpolationSettingsTest {
     }
 
     @Test
-    void nextSaveWritesSchemaTwoAndExplicitModes() {
+    void nextSaveWritesSchemaThreeAndExplicitCameraSource() {
         CraftRoute route = new CraftRoute(routeYaml("migrated-route"));
         YamlConfiguration saved = new YamlConfiguration();
 
         route.saveTo(saved);
 
-        assertEquals(2, saved.getInt("versions.schema"));
+        assertEquals(3, saved.getInt("versions.schema"));
         assertEquals("CENTRIPETAL_CATMULL_ROM", saved.getString("camera.positionInterpolation"));
         assertEquals("CATMULL_ROM", saved.getString("camera.rotationInterpolation"));
+        assertEquals("POINTS", saved.getString("camera.source"));
+        assertFalse(saved.contains("camera.recordingId"));
 
         CraftRoute reloaded = new CraftRoute(saved);
         assertEquals(PositionInterpolationMode.CENTRIPETAL_CATMULL_ROM,
                 reloaded.getPositionInterpolationMode());
         assertEquals(RotationInterpolationMode.CATMULL_ROM,
                 reloaded.getRotationInterpolationMode());
+        assertEquals(CameraSource.POINTS, reloaded.getCameraSource());
+    }
+
+    @Test
+    void recordedCameraSourceAndUuidRoundTripWithoutLosingTheRetainedReference() {
+        UUID recordingId = UUID.fromString("f3ea3837-0eb4-4450-a524-f61922ee3b0f");
+        CraftRoute route = new CraftRoute("recorded-route");
+        route.setCameraRecordingId(recordingId);
+        route.setCameraSource(CameraSource.RECORDED);
+        YamlConfiguration saved = new YamlConfiguration();
+
+        route.saveTo(saved);
+
+        assertEquals(3, saved.getInt("versions.schema"));
+        assertEquals("RECORDED", saved.getString("camera.source"));
+        assertEquals(recordingId.toString(), saved.getString("camera.recordingId"));
+
+        CraftRoute reloaded = new CraftRoute(saved);
+        assertEquals(CameraSource.RECORDED, reloaded.getCameraSource());
+        assertEquals(recordingId, reloaded.getCameraRecordingId().orElseThrow());
+
+        reloaded.setCameraSource(CameraSource.POINTS);
+        assertEquals(recordingId, reloaded.getCameraRecordingId().orElseThrow());
+        reloaded.clearCameraRecording();
+        assertEquals(CameraSource.POINTS, reloaded.getCameraSource());
+        assertTrue(reloaded.getCameraRecordingId().isEmpty());
     }
 
     @Test
@@ -115,6 +148,33 @@ class CraftRouteInterpolationSettingsTest {
                 () -> new CraftRoute(yaml));
         assertTrue(error.getMessage().contains("camera.positionInterpolation"));
         assertTrue(error.getMessage().contains("invalid-route"));
+    }
+
+    @Test
+    void invalidCameraSourceRejectsRouteWithFieldContext() {
+        YamlConfiguration yaml = routeYaml("invalid-source-route");
+        yaml.set("versions.schema", 3);
+        yaml.set("camera.source", "replay-file");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> new CraftRoute(yaml));
+
+        assertTrue(error.getMessage().contains("camera.source"));
+        assertTrue(error.getMessage().contains("invalid-source-route"));
+    }
+
+    @Test
+    void invalidRecordingUuidRejectsRouteWithFieldContext() {
+        YamlConfiguration yaml = routeYaml("invalid-recording-route");
+        yaml.set("versions.schema", 3);
+        yaml.set("camera.source", "RECORDED");
+        yaml.set("camera.recordingId", "not-a-uuid");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> new CraftRoute(yaml));
+
+        assertTrue(error.getMessage().contains("camera.recordingId"));
+        assertTrue(error.getMessage().contains("invalid-recording-route"));
     }
 
     @Test

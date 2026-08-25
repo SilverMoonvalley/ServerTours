@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict')
 const mineflayer = require('mineflayer')
+const minecraftData = require('minecraft-data')
 
 const EVENT_ROUTE = process.env.ST_P0_EVENT_ROUTE || 'p0_kernel_events'
 const CONFIRM_ROUTE = process.env.ST_P0_CONFIRM_ROUTE || 'p0_kernel_confirm'
@@ -8,6 +9,10 @@ const EVENT_TITLES = [0, 1, 2, 3].map((index) => `P0_FRAME_TITLE_${index}`)
 // Paper 1.21.5 emits `/plugins` as separate header and plugin-list messages.
 const PLUGIN_LIST_MESSAGE = /ProtocolLib,\s*ServerTours/i
 const QUIT_MARKER_MESSAGE = /Seed:/i
+const VERSION = process.env.MC_VERSION || '1.21.5'
+const TEXT_DISPLAY_TYPE_ID = minecraftData(VERSION)?.entitiesByName?.text_display?.id
+
+assert.ok(TEXT_DISPLAY_TYPE_ID != null, `${VERSION} does not expose the Java text_display entity`)
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -28,43 +33,46 @@ function createBot() {
     host: process.env.MC_HOST || '127.0.0.1',
     port: Number(process.env.MC_PORT || 25566),
     username: process.env.MC_USERNAME || 'TestBot',
-    version: process.env.MC_VERSION || '1.21.5',
+    version: VERSION,
     auth: process.env.MC_AUTH || 'offline'
   })
 
   bot.observedMessages = []
   bot.observedTitles = []
-  bot.activeProtocolVehicleId = null
-  bot.observedVehicleMounts = 0
-  bot.protocolVehicleMounts = []
-  bot.protocolVehicleDetaches = []
+  bot.knownTextDisplays = new Set()
+  bot.activeProtocolCameraId = null
+  bot.protocolDisplayTargets = []
+  bot.protocolCameraRestores = []
+  bot.protocolDisplayDestroys = []
   bot.on('messagestr', (message) => {
     bot.observedMessages.push(String(message))
   })
   bot.on('title', (title, type) => {
     bot.observedTitles.push({
       text: typeof title === 'string' ? title : JSON.stringify(title),
-      type
+      type,
+      at: Date.now()
     })
   })
-  bot._client.on('set_passengers', (packet) => {
-    const playerEntityId = bot.entity?.id
-    if (playerEntityId == null) return
-    if (packet.passengers.includes(playerEntityId)) {
-      bot.activeProtocolVehicleId = packet.entityId
-      bot.observedVehicleMounts += 1
-      bot.protocolVehicleMounts.push({ entityId: packet.entityId, at: Date.now() })
-    } else if (packet.entityId === bot.activeProtocolVehicleId) {
-      bot.protocolVehicleDetaches.push({ entityId: packet.entityId, at: Date.now() })
-      bot.activeProtocolVehicleId = null
+  bot._client.on('spawn_entity', (packet) => {
+    if (packet.type === TEXT_DISPLAY_TYPE_ID) {
+      bot.knownTextDisplays.add(packet.entityId)
     }
   })
-  // Mineflayer 4.32 keeps `bot.vehicle` stale after 1.21.5 entity removal;
-  // track the authoritative protocol packets instead.
+  bot._client.on('camera', (packet) => {
+    const event = { entityId: packet.cameraId, at: Date.now() }
+    bot.activeProtocolCameraId = packet.cameraId
+    if (bot.knownTextDisplays.has(packet.cameraId)) {
+      bot.protocolDisplayTargets.push(event)
+    } else if (packet.cameraId === bot.entity?.id) {
+      bot.protocolCameraRestores.push(event)
+    }
+  })
   bot._client.on('entity_destroy', (packet) => {
-    if (packet.entityIds.includes(bot.activeProtocolVehicleId)) {
-      bot.protocolVehicleDetaches.push({ entityId: bot.activeProtocolVehicleId, at: Date.now() })
-      bot.activeProtocolVehicleId = null
+    for (const entityId of packet.entityIds) {
+      if (bot.knownTextDisplays.has(entityId)) {
+        bot.protocolDisplayDestroys.push({ entityId, at: Date.now() })
+      }
     }
   })
   bot.on('error', (error) => {
@@ -280,7 +288,7 @@ function assertCoreState(actual, expected) {
 
 async function waitForCoreRestored(bot, expected, maxMs = 10000) {
   const actual = await waitForCondition(bot, 'player core state restoration', () => {
-    assert.equal(bot.activeProtocolVehicleId, null, 'camera vehicle should be detached or removed on the client')
+    assert.equal(bot.activeProtocolCameraId, bot.entity.id, 'camera should be reset to the player on the client')
     const actual = captureCoreState(bot)
     assertCoreState(actual, expected)
     return actual
@@ -335,19 +343,34 @@ async function setTickRate(bot, rate) {
 async function testNormalDuration(bot, expectedState) {
   await setTickRate(bot, 20)
   const messageStart = bot.observedMessages.length
-  const mountStart = bot.protocolVehicleMounts.length
+  const titleStart = bot.observedTitles.length
+  const targetStart = bot.protocolDisplayTargets.length
+  const restoreStart = bot.protocolCameraRestores.length
   bot.chat(`/tour play ${EVENT_ROUTE}`)
-  const mount = await waitForCondition(bot, 'normal-rate camera mount', () => {
-    return bot.protocolVehicleMounts.slice(mountStart)[0]
+  const target = await waitForCondition(bot, 'normal-rate TextDisplay camera target', () => {
+    return bot.protocolDisplayTargets.slice(targetStart)[0]
   }, 5000)
-  const detach = await waitForCondition(bot, 'normal-rate camera detach', () => {
-    return bot.protocolVehicleDetaches.find((entry) => entry.entityId === mount.entityId && entry.at >= mount.at)
+  const restore = await waitForCondition(bot, 'normal-rate camera restoration', () => {
+    return bot.protocolCameraRestores.slice(restoreStart).find((entry) => entry.at >= target.at)
+  }, 5000)
+  const firstFrame = await waitForCondition(bot, 'normal-rate first-frame title', () => {
+    return bot.observedTitles.slice(titleStart)
+      .find((entry) => entry.type === 'title' && entry.text.includes(EVENT_TITLES[0]))
+  }, 5000)
+  await waitForCondition(bot, 'normal-rate TextDisplay destruction', () => {
+    // A scheduler skip may hard-rebase the camera before natural completion,
+    // so the first target can be destroyed before the final player-camera
+    // restore. The dedicated display test validates the final restore-before-
+    // destroy ordering; here we only need this session's target to be cleaned.
+    return bot.protocolDisplayDestroys.find((entry) => entry.entityId === target.entityId && entry.at >= target.at)
   }, 5000)
   await waitForCoreRestored(bot, expectedState, 5000)
   assert.equal(countMessages(bot, messageStart, QUIT_MARKER_MESSAGE), 1, 'natural finish should execute QUIT once')
 
   const expectedMs = EVENT_TITLES.length * 100
-  const actualMs = detach.at - mount.at
+  // Camera creation happens during the startup transaction, before the scene
+  // clock is anchored. Frame-zero dispatch is the observable playback start.
+  const actualMs = restore.at - firstFrame.at
   const errorMs = Math.abs(actualMs - expectedMs)
   assert.ok(
     errorMs <= 50,
@@ -495,7 +518,9 @@ async function testDisconnectRejoinAndImmediatePlay(bot, expectedState) {
   const oldStart = bot.observedMessages.length
   bot.chat(`/tour play ${CONFIRM_ROUTE}`)
   await waitForMessageSince(bot, /P0_CONFIRM_EXIT_POINT/, oldStart, 5000)
-  await waitForCondition(bot, 'camera mount before disconnect', () => bot.activeProtocolVehicleId, 5000)
+  await waitForCondition(bot, 'TextDisplay camera target before disconnect', () => {
+    return bot.knownTextDisplays.has(bot.activeProtocolCameraId)
+  }, 5000)
 
   const ended = waitForEnd(bot)
   bot.quit()

@@ -6,16 +6,19 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class BundledYamlResourcesTest {
     @Test
     void cameraDefaultsAndInterpolationTranslationsAreValidYaml() {
         YamlConfiguration config = load("config.yml");
-        assertEquals("VEHICLE", config.getString("playMode.camera.javaBackend"));
+        assertFalse(config.contains("playMode.camera.javaBackend"));
         assertEquals(3, config.getInt("playMode.camera.interpolationTicks"));
+        assertEquals(300L, config.getLong("recording.maxDurationSeconds"));
 
         YamlConfiguration lang = load("lang.yml");
         assertNotNull(lang.getString("chatMenu.labels.positionInterpolation"));
@@ -23,6 +26,18 @@ class BundledYamlResourcesTest {
         assertNotNull(lang.getString(
                 "chatMenu.tooltips.positionInterpolationModes.centripetal_catmull_rom"));
         assertNotNull(lang.getString("chatMenu.tooltips.rotationInterpolationModes.catmull_rom"));
+        for (String key : List.of(
+                "started", "resumed", "processing", "saved", "cancelled", "draftSaved",
+                "noDrafts", "draftsHeader", "draftLine", "actionBar", "discarded", "sourceChanged",
+                "errors.notReady", "errors.invalidName", "errors.nameReserved",
+                "errors.invalidSettings", "errors.setupFailed", "errors.invalidPlayerState",
+                "errors.javaOnly", "errors.alreadyRecording", "errors.notRecording",
+                "errors.tooShort", "errors.draftNotFound", "errors.notDraftOwner",
+                "errors.processing", "errors.worldUnavailable", "errors.saveFailed",
+                "errors.compileFailed", "errors.commitFailed", "errors.recordingUnavailable")) {
+            assertNotNull(lang.getString("commands.record." + key),
+                    "missing recording translation commands.record." + key);
+        }
     }
 
     private static YamlConfiguration load(String resourceName) {

@@ -110,6 +110,11 @@ public final class DisplayCameraMovementHandler implements MovementHandler {
     }
 
     @Override
+    public int presentationLeadFrames() {
+        return this.interpolationTicks;
+    }
+
+    @Override
     public void rebase(CraftTouringPlayer touringPlayer, Location location,
                        @NotNull StateRebaseReason reason) {
         Objects.requireNonNull(reason, "reason may not be null");

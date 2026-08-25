@@ -22,6 +22,10 @@ public class EditSubCommand implements CommandHandler.SubCommand {
             player.sendMessage(ServerTours.translate("commands.errors.alreadyEditing"));
             return;
         }
+        if (ServerTours.getInstance().getRecordingManager().isRecording(player)) {
+            player.sendMessage(ServerTours.translate("commands.record.errors.alreadyRecording"));
+            return;
+        }
         CraftRoute route = ServerTours.getInstance().getRouteManager().getRoute(array[1]);
         if (route == null) {
             player.sendMessage(ServerTours.translate("commands.errors.routeNotFound", array[1]));

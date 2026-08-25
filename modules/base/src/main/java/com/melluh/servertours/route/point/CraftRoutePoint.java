@@ -232,7 +232,14 @@ public abstract class CraftRoutePoint implements RoutePoint {
 
     @Override
     public void setTicksVisible(int n) {
-        this.setSecondsVisible(n / 20.0f);
+        int targetTicks = Math.max(n, 0);
+        float seconds = targetTicks / 20.0f;
+        // Preserve the integer API exactly despite values such as 7/20 being
+        // represented a fraction below 0.35f and truncating back to 6 ticks.
+        while ((int) (seconds * 20.0f) < targetTicks) {
+            seconds = Math.nextUp(seconds);
+        }
+        this.setSecondsVisible(seconds);
     }
 
     public void setSecondsVisible(float a) {

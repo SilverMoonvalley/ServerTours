@@ -18,5 +18,6 @@ public interface TrackContext {
 
     @NotNull Route getRoute();
 
+    /** Returns the duration of the route's selected point or recorded built-in camera track. */
     long getCameraDurationFrames();
 }

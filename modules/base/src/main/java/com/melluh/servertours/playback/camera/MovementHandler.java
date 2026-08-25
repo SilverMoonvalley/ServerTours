@@ -11,6 +11,14 @@ public interface MovementHandler {
     void move(CraftTouringPlayer p0, Location p1);
 
     /**
+     * Presentation-only lead used to offset client interpolation latency.
+     * Logical scene time and non-interpolating transports remain unchanged.
+     */
+    default int presentationLeadFrames() {
+        return 0;
+    }
+
+    /**
      * Snaps the camera transport to a discontinuous target. Existing movement
      * handlers retain their previous behaviour through the default delegate.
      */

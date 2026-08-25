@@ -6,14 +6,12 @@ import com.melluh.servertours.api.TouringPlayer;
 import com.melluh.servertours.api.event.RoutePlaybackBeginEvent;
 import com.melluh.servertours.api.event.RoutePlaybackEndEvent;
 import com.melluh.servertours.api.object.Route;
+import com.melluh.servertours.api.object.CameraSource;
 import com.melluh.servertours.api.playback.PlaybackState;
 import com.melluh.servertours.api.playback.track.TrackFactory;
 import com.melluh.servertours.api.playback.track.TrackRegistration;
-import com.melluh.servertours.playback.camera.BedrockMovementHandler;
 import com.melluh.servertours.playback.camera.CameraPlaybackSettings;
 import com.melluh.servertours.playback.camera.DisplayCameraMovementHandler;
-import com.melluh.servertours.playback.camera.JavaCameraBackend;
-import com.melluh.servertours.playback.camera.JavaMovementHandler;
 import com.melluh.servertours.playback.camera.MovementHandler;
 import com.melluh.servertours.playback.timeline.NanoClock;
 import com.melluh.servertours.playback.track.CraftTrackRegistration;
@@ -30,7 +28,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDismountEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.server.PluginDisableEvent;
@@ -117,6 +114,20 @@ public class CraftPlaybackManager implements PlaybackManager, Listener {
     public CraftTouringPlayer showTour(Player obj, CraftRoute obj2) {
         Objects.requireNonNull(obj, "player may not be null");
         Objects.requireNonNull(obj2, "route may not be null");
+        if (ServerTours.getInstance().getRecordingManager() != null
+                && ServerTours.getInstance().getRecordingManager().isRecording(obj)) {
+            obj.sendMessage(ServerTours.translate("commands.record.errors.alreadyRecording"));
+            return null;
+        }
+        if (obj2.getCameraSource() == CameraSource.RECORDED) {
+            UUID recordingId = obj2.getCameraRecordingId().orElse(null);
+            if (recordingId == null || ServerTours.getInstance().getRecordingManager() == null
+                    || ServerTours.getInstance().getRecordingManager().getRepository()
+                    .getReady(recordingId).isEmpty()) {
+                obj.sendMessage(ServerTours.translate("commands.record.errors.recordingUnavailable"));
+                return null;
+            }
+        }
         if (obj2.getNumPoints() < 1) {
             obj.sendMessage(ServerTours.translate("commands.errors.noPoints"));
             return null;
@@ -147,7 +158,7 @@ public class CraftPlaybackManager implements PlaybackManager, Listener {
             session = new CraftTouringPlayer(
                     player,
                     route,
-                    this.createMovementHandler(player),
+                    this.createMovementHandler(route),
                     this,
                     generation,
                     this.snapshotTrackFactories(),
@@ -211,14 +222,19 @@ public class CraftPlaybackManager implements PlaybackManager, Listener {
         return false;
     }
 
-    private MovementHandler createMovementHandler(Player player) {
-        if (ServerTours.getInstance().isBedrockPlayer(player)) {
-            return new BedrockMovementHandler();
-        }
+    private MovementHandler createMovementHandler(CraftRoute route) {
         CameraPlaybackSettings settings = CameraPlaybackSettings.load(ServerTours.getInstance().getConfig());
-        return settings.javaBackend() == JavaCameraBackend.DISPLAY
-                ? new DisplayCameraMovementHandler(settings)
-                : new JavaMovementHandler();
+        if (route.getCameraSource() == CameraSource.RECORDED) {
+            long endFrame = route.getCameraRecordingId()
+                    .flatMap(id -> ServerTours.getInstance().getRecordingManager()
+                            .getRepository().getReady(id))
+                    .map(recording -> recording.endFrame())
+                    .orElse(0L);
+            int effectiveInterpolation = (int) Math.min(settings.interpolationTicks(), endFrame);
+            settings = new CameraPlaybackSettings(effectiveInterpolation,
+                    settings.anchorIntervalFrames(), settings.maxAnchorDistance());
+        }
+        return new DisplayCameraMovementHandler(settings);
     }
 
     public boolean isTouringPlayer(Player player) {
@@ -489,14 +505,6 @@ public class CraftPlaybackManager implements PlaybackManager, Listener {
         if (touringPlayer != null && touringPlayer.isGamemodeLocked()) {
             playerGameModeChangeEvent.setCancelled(true);
             ServerTours.getInstance().getLogger().warning("Cannot change player gamemode while viewing a tour");
-        }
-    }
-
-    @EventHandler
-    public void onPlayerDismount(EntityDismountEvent entityDismountEvent) {
-        Entity entity = entityDismountEvent.getEntity();
-        if (entity instanceof Player player) {
-            this.handlePlayerExit(player, entityDismountEvent);
         }
     }
 

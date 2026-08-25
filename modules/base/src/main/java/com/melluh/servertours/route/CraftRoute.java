@@ -1,11 +1,12 @@
 package com.melluh.servertours.route;
 
 import com.melluh.servertours.ServerTours;
+import com.melluh.servertours.api.object.CameraSource;
+import com.melluh.servertours.api.object.PositionInterpolationMode;
+import com.melluh.servertours.api.object.RotationInterpolationMode;
 import com.melluh.servertours.api.object.Route;
 import com.melluh.servertours.api.object.RoutePoint;
 import com.melluh.servertours.api.object.RoutePointType;
-import com.melluh.servertours.api.object.PositionInterpolationMode;
-import com.melluh.servertours.api.object.RotationInterpolationMode;
 import com.melluh.servertours.editmode.EditingPlayer;
 import com.melluh.servertours.route.point.CraftInterpolatePoint;
 import com.melluh.servertours.route.point.CraftOrbitPoint;
@@ -20,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CraftRoute implements Route {
-    private static final int CURRENT_SCHEMA_VERSION = 2;
+    private static final int CURRENT_SCHEMA_VERSION = 3;
 
     private final String name;
     private final List<CraftRoutePoint> points;
@@ -28,12 +29,15 @@ public class CraftRoute implements Route {
     private boolean usePlayerWorld;
     private PositionInterpolationMode positionInterpolationMode;
     private RotationInterpolationMode rotationInterpolationMode;
+    private CameraSource cameraSource;
+    private UUID cameraRecordingId;
 
     public CraftRoute(String name) {
         this.points = new ArrayList<>();
         this.name = name;
         this.positionInterpolationMode = PositionInterpolationMode.CENTRIPETAL_CATMULL_ROM;
         this.rotationInterpolationMode = RotationInterpolationMode.CATMULL_ROM;
+        this.cameraSource = CameraSource.POINTS;
     }
 
     public CraftRoute(ConfigurationSection configurationSection) {
@@ -52,6 +56,21 @@ public class CraftRoute implements Route {
                 RotationInterpolationMode.class,
                 RotationInterpolationMode.CATMULL_ROM
         );
+        this.cameraSource = readEnum(
+                configurationSection,
+                "camera.source",
+                CameraSource.class,
+                CameraSource.POINTS
+        );
+        String recordingId = configurationSection.getString("camera.recordingId");
+        if (recordingId != null && !recordingId.isBlank()) {
+            try {
+                this.cameraRecordingId = UUID.fromString(recordingId.trim());
+            } catch (IllegalArgumentException exception) {
+                throw new IllegalArgumentException("Invalid camera.recordingId value '" + recordingId
+                        + "' for route '" + this.name + "'", exception);
+            }
+        }
         for (ConfigurationSection configurationSection2 : Utils.sectionsAsList(configurationSection.getConfigurationSection("points"))) {
             CraftRoutePoint instantiatePoint = this.instantiatePoint(RoutePointType.valueOf(configurationSection2.getString("type")));
             instantiatePoint.loadFrom(configurationSection2);
@@ -67,6 +86,9 @@ public class CraftRoute implements Route {
         configurationSection.set("versions.schema", CURRENT_SCHEMA_VERSION);
         configurationSection.set("camera.positionInterpolation", this.positionInterpolationMode.name());
         configurationSection.set("camera.rotationInterpolation", this.rotationInterpolationMode.name());
+        configurationSection.set("camera.source", this.cameraSource.name());
+        configurationSection.set("camera.recordingId",
+                this.cameraRecordingId == null ? null : this.cameraRecordingId.toString());
         ConfigurationSection section = configurationSection.createSection("points");
         int i = 0;
         for (CraftRoutePoint point : this.points) {
@@ -194,6 +216,32 @@ public class CraftRoute implements Route {
         }
         this.rotationInterpolationMode = required;
         this.recalculateSplines();
+    }
+
+    @Override
+    public CameraSource getCameraSource() {
+        return this.cameraSource;
+    }
+
+    @Override
+    public void setCameraSource(CameraSource source) {
+        this.cameraSource = Objects.requireNonNull(source, "camera source may not be null");
+    }
+
+    @Override
+    public Optional<UUID> getCameraRecordingId() {
+        return Optional.ofNullable(this.cameraRecordingId);
+    }
+
+    @Override
+    public void setCameraRecordingId(UUID recordingId) {
+        this.cameraRecordingId = Objects.requireNonNull(recordingId, "recording id may not be null");
+    }
+
+    @Override
+    public void clearCameraRecording() {
+        this.cameraRecordingId = null;
+        this.cameraSource = CameraSource.POINTS;
     }
 
     public Optional<EditingPlayer> getEditingPlayer() {

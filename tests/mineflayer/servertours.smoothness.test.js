@@ -2,9 +2,14 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const mineflayer = require('mineflayer')
+const minecraftData = require('minecraft-data')
 
 const ROUTE_NAME = process.env.ST_ROUTE_NAME || 'complex_path'
 const SAMPLE_MS = Number(process.env.ST_SAMPLE_MS || 100)
+const VERSION = process.env.MC_VERSION || '1.21.5'
+const TEXT_DISPLAY_TYPE_ID = minecraftData(VERSION)?.entitiesByName?.text_display?.id
+
+assert.ok(TEXT_DISPLAY_TYPE_ID != null, `${VERSION} does not expose the Java text_display entity`)
 
 const POINTS = [
   { x: 0, y: 96, z: -24, yaw: -59, pitch: -14, seconds: 3.4, type: 'INTERPOLATE', label: 'launch_sweep' },
@@ -35,11 +40,21 @@ function createBot() {
     host: process.env.MC_HOST || '127.0.0.1',
     port: Number(process.env.MC_PORT || 25566),
     username: process.env.MC_USERNAME || 'TestBot',
-    version: process.env.MC_VERSION || '1.21.5',
+    version: VERSION,
     auth: process.env.MC_AUTH || 'offline'
   })
 
   bot.observedMessages = []
+  bot.knownTextDisplays = new Set()
+  bot.displayTargetPositions = new Map()
+  bot.activeProtocolCameraId = null
+  bot.displayLifecycle = {
+    spawns: 0,
+    cameraTargets: 0,
+    moves: 0,
+    destroys: 0,
+    restores: 0
+  }
   bot.on('messagestr', (message) => {
     bot.observedMessages.push(message)
   })
@@ -48,6 +63,47 @@ function createBot() {
   })
   bot.on('kicked', (reason) => {
     bot.lastKickReason = reason
+  })
+  bot._client.on('spawn_entity', (packet) => {
+    if (packet.type !== TEXT_DISPLAY_TYPE_ID) return
+    bot.knownTextDisplays.add(packet.entityId)
+    bot.displayTargetPositions.set(packet.entityId, {
+      x: packet.x,
+      y: packet.y,
+      z: packet.z,
+      source: 'display_spawn'
+    })
+    bot.displayLifecycle.spawns += 1
+  })
+  bot._client.on('camera', (packet) => {
+    bot.activeProtocolCameraId = packet.cameraId
+    if (bot.knownTextDisplays.has(packet.cameraId)) {
+      bot.displayLifecycle.cameraTargets += 1
+    } else if (packet.cameraId === bot.entity?.id) {
+      bot.displayLifecycle.restores += 1
+    }
+  })
+  bot._client.on('entity_teleport', (packet) => {
+    if (!bot.knownTextDisplays.has(packet.entityId)) return
+    // minecraft-protocol 1.21.5 still describes the pre-1.21.5 tail of this
+    // packet. XYZ is decoded before that stale tail and is reliable; yaw,
+    // pitch and interpolation as rendered by the client are deliberately not
+    // asserted by this headless regression.
+    if (![packet.x, packet.y, packet.z].every(Number.isFinite)) return
+    bot.displayTargetPositions.set(packet.entityId, {
+      x: packet.x,
+      y: packet.y,
+      z: packet.z,
+      source: 'display_teleport'
+    })
+    bot.displayLifecycle.moves += 1
+  })
+  bot._client.on('entity_destroy', (packet) => {
+    for (const entityId of packet.entityIds) {
+      if (bot.knownTextDisplays.has(entityId)) {
+        bot.displayLifecycle.destroys += 1
+      }
+    }
   })
 
   return bot
@@ -68,18 +124,6 @@ async function waitForReady(bot, maxMs = 30000) {
   throw new Error('Timed out waiting for bot spawn')
 }
 
-async function waitForMessage(bot, matcher, maxMs = 20000) {
-  const started = Date.now()
-  const startIndex = bot.observedMessages.length
-  while (Date.now() - started < maxMs) {
-    await failFast(bot)
-    const found = bot.observedMessages.slice(startIndex).find((message) => matcher.test(message))
-    if (found) return found
-    await wait(250)
-  }
-  throw new Error(`Timed out waiting for message ${matcher}. Saw: ${bot.observedMessages.join(' | ')}`)
-}
-
 async function waitForMessageSince(bot, matcher, startIndex, maxMs = 20000) {
   const started = Date.now()
   while (Date.now() - started < maxMs) {
@@ -97,57 +141,19 @@ async function sendCommand(bot, command, delayMs = 450) {
   await failFast(bot)
 }
 
-async function waitForNextMatchingMessage(bot, matcher, startIndex, maxMs = 2000) {
-  const started = Date.now()
-  let cursor = startIndex
-  while (Date.now() - started < maxMs) {
-    await failFast(bot)
-    const messages = bot.observedMessages.slice(cursor)
-    const found = messages.find((message) => matcher.test(message))
-    if (found) return {
-      message: found,
-      nextIndex: bot.observedMessages.length
-    }
-    cursor = bot.observedMessages.length
-    await wait(50)
-  }
-  throw new Error(`Timed out waiting for sampled message ${matcher}`)
-}
-
-async function sampleServerPosition(bot) {
-  const startIndex = bot.observedMessages.length
-  bot.chat(`/data get entity ${bot.username} Pos`)
-  const { message } = await waitForNextMatchingMessage(
-    bot,
-    /has the following entity data|拥有以下实体数据|以下实体数据/i,
-    startIndex,
-    2500
-  )
-  const matches = [...message.matchAll(/(-?\d+(?:\.\d+)?)d/g)].map((match) => Number(match[1]))
-  if (matches.length < 3) {
-    throw new Error(`Could not parse position from data command message: ${message}`)
-  }
-  return {
-    t: Date.now(),
-    x: matches[0],
-    y: matches[1],
-    z: matches[2]
-  }
-}
-
 function sampleClientPosition(bot) {
-  const vehicle = bot.vehicle
-  const entity = vehicle || bot.entity
-  if (!entity?.position) {
-    throw new Error('Could not sample client position because no entity position is available')
+  const entityId = bot.activeProtocolCameraId
+  const position = bot.displayTargetPositions.get(entityId)
+  if (!bot.knownTextDisplays.has(entityId) || !position) {
+    throw new Error('Could not sample a current Java TextDisplay camera target')
   }
-  const { x, y, z } = entity.position
   return {
     t: Date.now(),
-    x,
-    y,
-    z,
-    source: vehicle ? 'vehicle' : 'player'
+    x: position.x,
+    y: position.y,
+    z: position.z,
+    source: position.source,
+    entityId
   }
 }
 
@@ -254,7 +260,7 @@ function analyzeSamples(samples) {
     midRouteTeleportLikeStepCount: midRouteTeleports.length,
     observedPathDistance: Number(observedPathDistance.toFixed(3)),
     plannedPathDistance: Number(pathDistance(POINTS).toFixed(3)),
-    clientBoundingBox: {
+    displayTargetBoundingBox: {
       x: Number(range(samples, 'x').toFixed(3)),
       y: Number(range(samples, 'y').toFixed(3)),
       z: Number(range(samples, 'z').toFixed(3))
@@ -288,8 +294,10 @@ function analyzeSamples(samples) {
       speed: Number(step.speed.toFixed(3))
     })),
     notes: [
-      'teleportLikeStepCount may include initial route teleport and final restore teleport',
+      'teleportLikeStepCount may include the initial target or an intentional hard rebase',
       'midRouteTeleportLikeStepCount is the primary discontinuity signal',
+      'samples are server-sent TextDisplay target positions, not rendered client interpolation',
+      'Mineflayer 1.21.5 has a stale entity_teleport tail schema, so rotation is a manual Java-client assertion',
       'score is a heuristic for regression comparison, not a physics-certified metric'
     ]
   }
@@ -326,19 +334,46 @@ async function playAndAnalyze(bot) {
   const samples = []
   try {
     const startIndex = bot.observedMessages.length
+    const lifecycleStart = { ...bot.displayLifecycle }
     bot.chat(`/tour play ${ROUTE_NAME}`)
     const matchedMessage = await waitForMessageSince(bot, /Complex path movement route started/i, startIndex, 8000)
+    const cameraTargetStarted = Date.now()
+    while (!bot.knownTextDisplays.has(bot.activeProtocolCameraId)) {
+      await failFast(bot)
+      if (Date.now() - cameraTargetStarted > 5000) {
+        throw new Error('Timed out waiting for Java TextDisplay camera target; ensure the DISPLAY backend is active')
+      }
+      await wait(50)
+    }
     const expectedRouteMs = POINTS.reduce((sum, point) => sum + point.seconds * 1000, 0)
     const routeStartAt = Date.now()
     while (Date.now() < routeStartAt + expectedRouteMs - 250) {
       samples.push(sampleClientPosition(bot))
       await wait(SAMPLE_MS)
     }
+    const cleanupDeadline = Date.now() + 5000
+    while (
+      (bot.displayLifecycle.restores === lifecycleStart.restores ||
+        bot.displayLifecycle.destroys === lifecycleStart.destroys) &&
+      Date.now() < cleanupDeadline
+    ) {
+      await failFast(bot)
+      await wait(50)
+    }
+    if (bot.displayLifecycle.restores === lifecycleStart.restores) {
+      throw new Error('TextDisplay playback did not restore the camera to the player')
+    }
+    if (bot.displayLifecycle.destroys === lifecycleStart.destroys) {
+      throw new Error('TextDisplay playback did not destroy its camera entity')
+    }
     return {
       matchedMessage,
       rawSampleCount: samples.length,
       analyzedSampleCount: samples.length,
       report: analyzeSamples(samples),
+      displayLifecycle: Object.fromEntries(Object.entries(bot.displayLifecycle).map(([key, value]) => {
+        return [key, value - lifecycleStart[key]]
+      })),
       firstSample: samples[0],
       lastSample: samples[samples.length - 1]
     }
@@ -358,7 +393,7 @@ async function main() {
 
     const output = {
       status: 'measured',
-      scenario: 'Create complex ServerTours path route and analyze client-observed playback smoothness',
+      scenario: 'Create a complex route and analyze Java TextDisplay camera target continuity',
       routeName: ROUTE_NAME,
       pointCount: POINTS.length,
       matchedMessage: result.matchedMessage,
@@ -375,10 +410,15 @@ async function main() {
 
     assert.equal(result.report.midRouteTeleportLikeStepCount, 0, 'route should not have mid-route teleport-like discontinuities')
     assert.ok(result.report.sampleCount >= 120, 'should collect enough samples for smoothness analysis')
-    assert.ok(result.report.observedPathDistance >= 180, 'client should observe substantial route movement, not just rotation')
-    assert.ok(result.report.clientBoundingBox.x >= 45, 'client X movement range should cover the complex route')
-    assert.ok(result.report.clientBoundingBox.z >= 45, 'client Z movement range should cover the complex route')
-    assert.ok(result.report.smoothnessScoreHeuristic >= 60, 'smoothness score should stay above regression threshold')
+    assert.ok(result.report.observedPathDistance >= 180, 'display targets should cover substantial route movement')
+    assert.ok(result.report.displayTargetBoundingBox.x >= 45, 'display target X range should cover the complex route')
+    assert.ok(result.report.displayTargetBoundingBox.z >= 45, 'display target Z range should cover the complex route')
+    assert.ok(result.report.smoothnessScoreHeuristic >= 60, 'target-continuity score should stay above regression threshold')
+    assert.ok(result.displayLifecycle.spawns >= 1, 'playback should spawn at least one TextDisplay camera')
+    assert.ok(result.displayLifecycle.cameraTargets >= 1, 'playback should target at least one TextDisplay camera')
+    assert.ok(result.displayLifecycle.moves >= 120, 'playback should send continuous TextDisplay target updates')
+    assert.ok(result.displayLifecycle.restores >= 1, 'playback should restore the camera to the player')
+    assert.ok(result.displayLifecycle.destroys >= 1, 'playback should destroy its TextDisplay camera')
 
     output.status = 'passed'
     fs.writeFileSync(

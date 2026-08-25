@@ -18,7 +18,7 @@
 - 当前 NMS 公共接口：
   - `modules/nms/src/main/java/com/melluh/servertours/nms/NmsHandler.java`
   - `modules/nms/src/main/java/com/melluh/servertours/nms/ModernMovementNmsHandler.java`
-  - `modules/nms/src/main/java/com/melluh/servertours/nms/TemporaryEntity.java`
+  - `modules/nms/src/main/java/com/melluh/servertours/nms/TemporaryDisplayCamera.java`
 
 ## 2. 一次完整更新流程
 
@@ -315,7 +315,7 @@ public enum NmsVersion {
 
 ## 8. 重点检查的 NMS 实现点
 
-ServerTours 的 NMS 主要服务于“让玩家坐在临时实体上平滑移动”以及“发送移动/旋转相关 packet”。每次升级重点看以下文件。
+ServerTours 的 NMS 主要服务于“创建玩家独享的 TextDisplay 相机目标”以及“发送 Display 移动相关 packet”。每次升级重点看以下文件。
 
 ### 8.1 `NmsHandler`
 
@@ -327,39 +327,28 @@ modules/v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsHandler.java
 
 需要确认：
 
-- `CraftWorld`、`CraftEntity`、`CraftPlayer` 包名已换成目标 `v1_21_Rx`。
-- `WorldServer`、`PositionMoveRotation`、`Vec3D` 等类名是否仍存在。
-- `ClientboundPlayerRotationPacket` 构造器是否变化。
-- `PacketPlayOutVehicleMove.a(...)` 是否仍可用。
+- `CraftWorld`、`CraftPlayer` 包名已换成目标 `v1_21_Rx`。
+- `PositionMoveRotation`、`Vec3D` 等类名是否仍存在。
 - `PacketPlayOutEntityTeleport` 构造器是否变化。
 - 发送 packet 的链路 `getHandle().f.b(packet)` 是否仍可用。
 
-### 8.2 `NmsTemporaryEntity`
+### 8.2 `NmsTemporaryDisplayCamera`
 
 路径示例：
 
 ```text
-modules/v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsTemporaryEntity.java
+modules/v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsTemporaryDisplayCamera.java
 ```
 
 需要确认：
 
-- `EntityArmorStand` 构造器是否变化。
-- 设置隐身、无重力、无碰撞、marker、血量/尺寸相关方法名是否变化。
-- `GenericAttributes.s` 是否仍代表目标属性。
-- `nmsAddPassenger` 中 `getHandle().a(this, true)` 是否仍可用。
-- `nmsMove`、`nmsSetLocation` 使用的位置设置方法是否仍正确。
-- `RemovalReason.a` 是否仍可用。
-- 覆盖的 tick、damage、interact、remove 方法签名是否仍匹配。
+- `Display.TextDisplay` 和 `EntityTypes` 中 TextDisplay 类型字段是否变化。
+- Display 插值时长对应的 metadata accessor 是否变化。
+- `PacketPlayOutSpawnEntity`、`PacketPlayOutEntityMetadata`、`PacketPlayOutCamera`、`PacketPlayOutEntityTeleport` 和 `PacketPlayOutEntityDestroy` 构造器是否变化。
+- `nmsSpawn -> nmsSetCamera -> nmsMove* -> nmsResetCamera -> nmsRemove` 的包顺序是否仍被客户端接受。
+- Display 必须保持 packet-only，只发送给当前观看者，不能注册进服务端世界。
 
-两个已有版本的差异可以作为参考：
-
-```text
-1.21.4: marker/尺寸相关方法为 u(true)、x(0.0f)，空 tick 方法名为 h()
-1.21.5: marker/尺寸相关方法为 t(true)、d(0.0f)，空 tick 方法名为 g()
-```
-
-这类短方法名是 Mojang/Spigot 小版本升级最容易变的位置，编译错误时优先查这里。
+两个已有版本的 `NmsTemporaryDisplayCamera` 可以作为参考。Display metadata accessor 和实体类型字段通常是 Mojang/Spigot 小版本升级最容易变的位置，编译错误时优先查这里。
 
 ## 9. 构建验证
 
@@ -417,7 +406,7 @@ modules/base/target/ServerTours-3.0.0.jar
 5. 将其中一个点改为 `INTERPOLATE`，确认粒子路径显示正常。
 6. 执行预览，确认玩家能被平滑移动，视角旋转正常。
 7. 执行 `/tour play nmstest`，确认导览能开始、结束并恢复玩家背包/等级/游戏模式。
-8. 检查控制台是否存在 NMS、packet、entity metadata、passenger、teleport 相关异常。
+8. 检查控制台是否存在 NMS、packet、Display metadata、camera target、teleport 相关异常。
 
 ## 11. 常见问题
 

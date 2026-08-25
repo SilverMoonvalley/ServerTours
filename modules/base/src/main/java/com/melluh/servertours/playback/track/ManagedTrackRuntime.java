@@ -75,8 +75,9 @@ public final class ManagedTrackRuntime {
 
     /**
      * Renders a normal absolute-time update. Repeated targets are ignored;
-     * adjacent frames use the continuous callback and all other transitions
-     * snap through {@link StateTrackRuntime#rebase(PlaybackFrame, StateRebaseReason)}.
+     * every monotonic forward target uses the continuous callback. Scheduler
+     * catch-up is still ordinary absolute-time rendering; only an actual
+     * backwards transition is treated as a discontinuity here.
      */
     public void renderState(PlaybackFrame targetFrame) {
         Objects.requireNonNull(targetFrame, "targetFrame may not be null");
@@ -90,8 +91,7 @@ public final class ManagedTrackRuntime {
 
         if (!this.stateFrameRendered) {
             stateTrackRuntime.rebase(targetFrame, StateRebaseReason.SESSION_START);
-        } else if (targetFrame.index() > this.lastStateFrame
-                && targetFrame.index() - this.lastStateFrame == 1L) {
+        } else if (targetFrame.index() > this.lastStateFrame) {
             stateTrackRuntime.render(targetFrame);
         } else {
             stateTrackRuntime.rebase(targetFrame, StateRebaseReason.CLOCK_CATCH_UP);

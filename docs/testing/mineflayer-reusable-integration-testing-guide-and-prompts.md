@@ -44,7 +44,8 @@ Recommended stack:
 ```text
 project-root/
   docs/
-    mineflayer-reusable-integration-testing-guide-and-prompts.md
+    testing/
+      mineflayer-reusable-integration-testing-guide-and-prompts.md
   test-server/
     paper-<version>/
       plugins/

@@ -7,18 +7,18 @@
 - 项目版本：`2.1.7`
 - Java 版本：`17`
 - Maven 聚合模块：
-  - `nms`：跨版本 NMS 接口。
-  - `base`：插件主体与最终 shade 产物。
-  - `v1_21_4`：Minecraft `1.21.4`，CraftBukkit 包 `v1_21_R3`。
-  - `v1_21_5`：Minecraft `1.21.5`，CraftBukkit 包 `v1_21_R4`。
+  - `modules/nms`：跨版本 NMS 接口。
+  - `modules/base`：插件主体与最终 shade 产物。
+  - `modules/v1_21_4`：Minecraft `1.21.4`，CraftBukkit 包 `v1_21_R3`。
+  - `modules/v1_21_5`：Minecraft `1.21.5`，CraftBukkit 包 `v1_21_R4`。
 - 最终插件产物：
-  - `base/target/ServerTours-2.1.7.jar`
+  - `modules/base/target/ServerTours-2.1.7.jar`
 - 当前 NMS 分发入口：
-  - `base/src/main/java/com/melluh/servertours/util/nms/NmsVersion.java`
+  - `modules/base/src/main/java/com/melluh/servertours/util/nms/NmsVersion.java`
 - 当前 NMS 公共接口：
-  - `nms/src/main/java/com/melluh/servertours/nms/NmsHandler.java`
-  - `nms/src/main/java/com/melluh/servertours/nms/ModernMovementNmsHandler.java`
-  - `nms/src/main/java/com/melluh/servertours/nms/TemporaryEntity.java`
+  - `modules/nms/src/main/java/com/melluh/servertours/nms/NmsHandler.java`
+  - `modules/nms/src/main/java/com/melluh/servertours/nms/ModernMovementNmsHandler.java`
+  - `modules/nms/src/main/java/com/melluh/servertours/nms/TemporaryEntity.java`
 
 ## 2. 一次完整更新流程
 
@@ -27,7 +27,7 @@
 3. 复制上一版可工作的 NMS 模块，例如 `v1_21_5 -> v1_21_6`。
 4. 修改新模块目录、`artifactId`、Java 包名和 CraftBukkit import。
 5. 修改根 `pom.xml`，把新模块加入 `<modules>`。
-6. 修改 `base/pom.xml`，加入新模块依赖。
+6. 修改 `modules/base/pom.xml`，加入新模块依赖。
 7. 修改 `NmsVersion.java`，将目标 Minecraft 版本映射到新 `NmsHandler`。
 8. 编译新模块，修复 Mojang/Spigot NMS 改名、签名变化、构造器变化。
 9. 如果本次生成了难获取的 remapped/NMS jar，将它发布到团队 Nexus，供其他插件复用。
@@ -55,7 +55,7 @@ spigot-spigot-remapped 版本: v1_21_Rx
 
 ## 4. 准备 NMS 编译依赖
 
-当前 `v1_21_4/pom.xml` 和 `v1_21_5/pom.xml` 使用的是：
+当前 `modules/v1_21_4/pom.xml` 和 `modules/v1_21_5/pom.xml` 使用的是：
 
 ```xml
 <dependency>
@@ -96,7 +96,7 @@ Test-Path "$env:USERPROFILE\.m2\repository\net\minecraft\server\spigot-spigot-re
 如果本地不存在，但 Nexus 已经有该 artifact，运行一次 Maven 构建会自动下载：
 
 ```powershell
-mvn -pl v1_21_6 -am -DskipTests package
+mvn -pl modules/v1_21_6 -am -DskipTests package
 ```
 
 ### 4.2 本地生成后发布到 Nexus
@@ -194,12 +194,12 @@ C:\Users\Administrator\.m2\settings.xml
 ### 5.1 复制目录
 
 ```powershell
-robocopy v1_21_5 v1_21_6 /E
+robocopy modules\v1_21_5 modules\v1_21_6 /E
 ```
 
 ### 5.2 修改新模块 POM
 
-编辑 `v1_21_6/pom.xml`：
+编辑 `modules/v1_21_6/pom.xml`：
 
 ```xml
 <artifactId>v1_21_6</artifactId>
@@ -251,13 +251,13 @@ org.bukkit.craftbukkit.v1_21_R5
 建议先查再改：
 
 ```powershell
-rg -n "v1_21_5|v1_21_R4|R4" v1_21_6
+rg -n "v1_21_5|v1_21_R4|R4" modules/v1_21_6
 ```
 
 改完后确认没有旧版本残留：
 
 ```powershell
-rg -n "v1_21_5|v1_21_R4|R4" v1_21_6
+rg -n "v1_21_5|v1_21_R4|R4" modules/v1_21_6
 ```
 
 ## 6. 接入聚合构建
@@ -267,12 +267,12 @@ rg -n "v1_21_5|v1_21_R4|R4" v1_21_6
 在 `<modules>` 中新增：
 
 ```xml
-<module>v1_21_6</module>
+<module>modules/v1_21_6</module>
 ```
 
-当前结构不是 `nms/v1_21_Rx` 子目录，而是所有模块都在仓库根目录下，这一点不要照搬其他项目模板。
+所有 Java 模块统一位于仓库根目录的 `modules/` 下；新增版本模块也应保持同一层级，并在其父 POM 中使用 `<relativePath>../../pom.xml</relativePath>`。
 
-### 6.2 修改 `base/pom.xml`
+### 6.2 修改 `modules/base/pom.xml`
 
 在已有 `v1_21_4`、`v1_21_5` 依赖后新增：
 
@@ -292,7 +292,7 @@ rg -n "v1_21_5|v1_21_R4|R4" v1_21_6
 编辑：
 
 ```text
-base/src/main/java/com/melluh/servertours/util/nms/NmsVersion.java
+modules/base/src/main/java/com/melluh/servertours/util/nms/NmsVersion.java
 ```
 
 新增枚举项：
@@ -322,7 +322,7 @@ ServerTours 的 NMS 主要服务于“让玩家坐在临时实体上平滑移动
 路径示例：
 
 ```text
-v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsHandler.java
+modules/v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsHandler.java
 ```
 
 需要确认：
@@ -339,7 +339,7 @@ v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsHandler.java
 路径示例：
 
 ```text
-v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsTemporaryEntity.java
+modules/v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsTemporaryEntity.java
 ```
 
 需要确认：
@@ -366,19 +366,19 @@ v1_21_6/src/main/java/com/melluh/servertours/nms/v1_21_6/NmsTemporaryEntity.java
 ### 9.1 先构建公共接口和新 NMS 模块
 
 ```powershell
-mvn -pl nms,v1_21_6 -am -DskipTests clean package
+mvn -pl modules/nms,modules/v1_21_6 -am -DskipTests clean package
 ```
 
 如果只想验证新模块，也可以：
 
 ```powershell
-mvn -pl v1_21_6 -am -DskipTests package
+mvn -pl modules/v1_21_6 -am -DskipTests package
 ```
 
 ### 9.2 构建最终插件
 
 ```powershell
-mvn -pl base -am -DskipTests clean package
+mvn -pl modules/base -am -DskipTests clean package
 ```
 
 或构建全项目：
@@ -390,13 +390,13 @@ mvn -DskipTests clean package
 成功后检查：
 
 ```powershell
-Get-ChildItem base\target\*.jar
+Get-ChildItem modules\base\target\*.jar
 ```
 
 目标产物应包含：
 
 ```text
-base/target/ServerTours-2.1.7.jar
+modules/base/target/ServerTours-2.1.7.jar
 ```
 
 ## 10. 运行验证清单

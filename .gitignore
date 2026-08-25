@@ -1,22 +1,45 @@
-# Project exclude paths
-target/
-/.idea/
-# Compiled class file
+# Java / Maven
+**/target/
 *.class
-# Package Files #
+dependency-reduced-pom.xml
+out/
+gen/
+hs_err_pid*.log
+replay_pid*.log
+
+# Node.js integration tests
+/node_modules/
+/tests/mineflayer/reports/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local runtime environments and generated artifacts
+/test-server/
+/output/
+/TypeWriter/
+
+# IDE metadata
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Packaged archives
 *.war
 *.nar
 *.ear
 *.tar.gz
 *.rar
-
-# IntelliJ project files
-*.iml
-out
-gen
-dependency-reduced-pom.xml
-/.vscode/
-node_modules/
-test-server/
-/TypeWriter/
-/tests/mineflayer/reports/

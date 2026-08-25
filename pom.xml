@@ -17,10 +17,10 @@
     <name>ServerTours</name>
 
     <modules>
-        <module>nms</module>
-        <module>base</module>
-        <module>v1_21_4</module>
-        <module>v1_21_5</module>
+        <module>modules/nms</module>
+        <module>modules/base</module>
+        <module>modules/v1_21_4</module>
+        <module>modules/v1_21_5</module>
     </modules>
 
     <repositories>

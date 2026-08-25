@@ -4,7 +4,9 @@
   "type": "commonjs",
   "scripts": {
     "test:mineflayer": "node tests/mineflayer/servertours.integration.test.js",
-    "test:smoothness": "node tests/mineflayer/servertours.smoothness.test.js"
+    "test:smoothness": "node tests/mineflayer/servertours.smoothness.test.js",
+    "test:display-camera": "node tests/mineflayer/servertours.display-camera.test.js",
+    "test:playback-kernel": "node tests/mineflayer/servertours.playback-kernel.test.js"
   },
   "dependencies": {
     "mineflayer": "^4.31.0"

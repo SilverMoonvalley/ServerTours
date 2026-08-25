@@ -1,0 +1,94 @@
+#  ___                     _____
+# / __| ___ _ ___ _____ _ |_   _|__ _  _ _ _ ___
+# \__ \/ -_) '_\ V / -_) '_|| |/ _ \ || | '_(_-<
+# |___/\___|_|  \_/\___|_|  |_|\___/\_,_|_| /__/
+#
+# This config file automatically updates when new options are available.
+# Last automatic update: %date_time% (%version%)
+
+editMode:
+  # If set to true, players will be shown a persistent action bar
+  # notification while in edit mode. May conflict with other plugins
+  # that use the action bar.
+  actionBarEnabled: true
+
+  # If set to true, route points will automatically be selected after
+  # being placed.
+  selectPlacedPoint: false
+
+  # Route points may show warnings in chat when they are unable to
+  # function correctly (for example, interpolate points which don't
+  # have a point after them). Set to false to disable this behaviour.
+  enableWarnings: true
+
+  # Controls the particles shown in edit mode, which show you the
+  # path the player will take. This is shown for interpolate and orbit
+  # points.
+  particles:
+    # If set to true, particles are enabled by default. They can be
+    # toggled via the hotbar item.
+    enabledByDefault: true
+
+    # If set to true, only the path of the selected point will be
+    # shown. Otherwise, the path of the entire tour is shown.
+    showSelectedOnly: false
+
+  # ADVANCED: if set to true, alternative commands are enabled which
+  # perform the same functions as the hotbar items. This is useful if
+  # you can't use the hotbar for whatever reason (e.g. a plugin conflict).
+  # The server needs to be restarted/reloaded for this setting to take
+  # effect.
+  enableHotbarAltCommands: false
+
+playMode:
+  # Controls the camera transport used for Java Edition players. VEHICLE keeps
+  # the legacy invisible armor stand. DISPLAY uses a viewer-only text display
+  # and client interpolation; it requires a 1.19.4-or-newer Java client.
+  camera:
+    javaBackend: VEHICLE
+    interpolationTicks: 3
+    anchorIntervalFrames: 10
+    maxAnchorDistance: 25.0
+
+  # If set to true, players will be shown a persistent action bar
+  # notification while viewing a tour. May conflict with other plugins
+  # that use the action bar.
+  actionBarEnabled: true
+
+  # If set to true, players are allowed to exit the tour while it is
+  # still in progress by pressing SHIFT.
+  allowExit: true
+
+  # If set to true, the gamemode of touring players is set to spectator
+  # instead of adventure (the default). The differences between these
+  # are as follows:
+  # - Spectator mode doesn't show the crosshair or hotbar. However, the
+  #   progress bar feature will no longer work.
+  # - Spectator mode shows all invisible entities. This means you will
+  #   see, for example, the entities used by your holograms plugin.
+  #   ServerTours itself also uses an invisible entity, which might show
+  #   up if the player is looking down in the tour route.
+  # - Spectator mode isn't available on Bedrock edition.
+  useSpectator: false
+
+  # If set to true, the experience bar will be used to display how far
+  # along the tour route the player is. This doesn't work if 'useSpectator'
+  # is enabled.
+  xpBarProgress: true
+
+  # If set to true, players viewing a tour are unable to execute any
+  # commands.
+  disableCommands: false
+
+  # If set to true, players viewing a tour won't be able to see chat
+  # messages from other players. They also won't be able to send
+  # chat messages.
+  disableChat: false
+
+  # If set to true, dashes will be added before and after the description
+  # in the chat during a tour in order to clearly separate it from
+  # the rest of the chat. Example:
+  # ------------------------
+  # This is the description.
+  # ------------------------
+  sendDescriptionDashes: false

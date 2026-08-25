@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.melluh</groupId>
+        <artifactId>ServerTours</artifactId>
+        <!--suppress MavenPropertyInParent -->
+        <version>${env.project.version}</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>v1_21_4</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <defaultGoal>clean package</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
+                <configuration>
+                    <source>${env.java.version}</source>
+                    <target>${env.java.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.melluh</groupId>
+            <artifactId>nms</artifactId>
+            <version>2.1.7</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.5-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>datafixerupper</artifactId>
+            <version>6.0.8</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.minecraft.server</groupId>
+            <artifactId>spigot-spigot-remapped</artifactId>
+            <version>v1_21_R3</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -43,7 +43,7 @@ mvn test
 mvn -DskipTests package
 ```
 
-默认产物位于 `modules/base/target/ServerTours-2.1.7.jar`。
+默认产物位于 `modules/base/target/ServerTours-3.0.0.jar`。
 
 Mineflayer 测试需要先启动测试服务器，再安装 Node.js 依赖并运行对应场景：
 

@@ -91,13 +91,13 @@
         <dependency>
             <groupId>com.melluh</groupId>
             <artifactId>v1_21_4</artifactId>
-            <version>2.1.7</version>
+            <version>3.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.melluh</groupId>
             <artifactId>v1_21_5</artifactId>
-            <version>2.1.7</version>
+            <version>3.0.0</version>
             <scope>compile</scope>
         </dependency>
 

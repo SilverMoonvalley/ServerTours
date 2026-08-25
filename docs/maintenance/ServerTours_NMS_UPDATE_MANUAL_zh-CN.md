@@ -4,7 +4,7 @@
 
 ## 1. 当前项目基线
 
-- 项目版本：`2.1.7`
+- 项目版本：`3.0.0`
 - Java 版本：`17`
 - Maven 聚合模块：
   - `modules/nms`：跨版本 NMS 接口。
@@ -12,7 +12,7 @@
   - `modules/v1_21_4`：Minecraft `1.21.4`，CraftBukkit 包 `v1_21_R3`。
   - `modules/v1_21_5`：Minecraft `1.21.5`，CraftBukkit 包 `v1_21_R4`。
 - 最终插件产物：
-  - `modules/base/target/ServerTours-2.1.7.jar`
+  - `modules/base/target/ServerTours-3.0.0.jar`
 - 当前 NMS 分发入口：
   - `modules/base/src/main/java/com/melluh/servertours/util/nms/NmsVersion.java`
 - 当前 NMS 公共接口：
@@ -280,7 +280,7 @@ rg -n "v1_21_5|v1_21_R4|R4" modules/v1_21_6
 <dependency>
     <groupId>com.melluh</groupId>
     <artifactId>v1_21_6</artifactId>
-    <version>2.1.7</version>
+    <version>3.0.0</version>
     <scope>compile</scope>
 </dependency>
 ```
@@ -396,7 +396,7 @@ Get-ChildItem modules\base\target\*.jar
 目标产物应包含：
 
 ```text
-modules/base/target/ServerTours-2.1.7.jar
+modules/base/target/ServerTours-3.0.0.jar
 ```
 
 ## 10. 运行验证清单

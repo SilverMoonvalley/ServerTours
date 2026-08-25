@@ -6,7 +6,7 @@
 
 ## 1. 项目概况
 
-ServerTours 是一个 Bukkit/Paper 服务器导览插件，当前版本为 `2.1.7`。项目采用 Maven 多模块结构：
+ServerTours 是一个 Bukkit/Paper 服务器导览插件，当前版本为 `3.0.0`。项目采用 Maven 多模块结构：
 
 - `modules/base`：插件主体、命令、路线编辑、播放逻辑和最终 shade 产物。
 - `modules/nms`：跨版本 NMS 公共接口。
@@ -22,7 +22,7 @@ ServerTours 是一个 Bukkit/Paper 服务器导览插件，当前版本为 `2.1.
 - 强依赖：`ProtocolLib`
 - 软依赖：`PlaceholderAPI`、`VentureChat`、`floodgate`
 
-当前构建记录：配置团队 Nexus 后，执行 `mvn -DskipTests package` 已完成全部 Maven 模块构建，并产出 `modules/base/target/ServerTours-2.1.7.jar`。Maven 仍会报告动态项目版本和 Shade 重复类警告，但不影响本次构建成功。
+当前构建记录：配置团队 Nexus 后，执行 `mvn -DskipTests package` 已完成全部 Maven 模块构建，并产出 `modules/base/target/ServerTours-3.0.0.jar`。Maven 仍会报告动态项目版本和 Shade 重复类警告，但不影响本次构建成功。
 
 ## 2. 启动流程
 
@@ -268,5 +268,5 @@ NMS 主要用于：
 
 1. `PacketUtil.createEntityMetadataPacket()` 当前有 TODO，且真正写入 `WrappedDataValue` 的代码被注释掉了。这会影响编辑点名称、盔甲架姿态、实体隐身等 metadata 包的实际显示效果。
 2. `editMode.forceEnter` 被代码读取，但默认配置文件没有暴露，导致“强制接管别人正在编辑的路线”几乎不可配置。
-3. 团队 Nexus 已解决当前 `spigot-spigot-remapped` 依赖获取问题；全项目构建成功并已产出 `modules/base/target/ServerTours-2.1.7.jar`。
+3. 团队 Nexus 已解决当前 `spigot-spigot-remapped` 依赖获取问题；全项目构建成功并已产出 `modules/base/target/ServerTours-3.0.0.jar`。
 4. `usePlayerWorld` 已在路线文件中持久化并在播放时读取，但当前代码中没有明显的命令或菜单入口供普通管理员编辑该值。

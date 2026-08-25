@@ -37,7 +37,7 @@
         <dependency>
             <groupId>com.melluh</groupId>
             <artifactId>nms</artifactId>
-            <version>2.1.7</version>
+            <version>3.0.0</version>
             <scope>compile</scope>
         </dependency>
 
